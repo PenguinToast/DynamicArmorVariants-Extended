@@ -22,7 +22,7 @@ auto WornFormUpdater::ProcessEvent(
 	[[maybe_unused]] RE::BSTEventSource<RE::TESActorLocationChangeEvent>* a_eventSource)
 	-> RE::BSEventNotifyControl
 {
-	auto& actor = a_event->actor;
+	auto actor = a_event->actor ? a_event->actor->As<RE::Actor>() : nullptr;
 	if (actor && actor->Is3DLoaded()) {
 		Ext::Actor::Update3DSafe(actor);
 	}

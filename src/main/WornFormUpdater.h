@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Ext/Actor.h"
-#include "RE/TESActorLocationChangeEvent.h"
-#include "RE/TESFormDeleteEvent.h"
+#include <RE/T/TESActorLocationChangeEvent.h>
+#include <RE/T/TESFormDeleteEvent.h>
 
 class WornFormUpdater :
 	public RE::BSTEventSink<RE::TESActorLocationChangeEvent>,

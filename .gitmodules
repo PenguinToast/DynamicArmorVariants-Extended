@@ -1,9 +1,4 @@
-[submodule "external/CommonLibSSE"]
-	path = external/CommonLibSSE
-	url = https://github.com/Ryan-rsm-McKenzie/CommonLibSSE.git
-[submodule "tools/BethesdaCMakeModules"]
-	path = tools/BethesdaCMakeModules
-	url = https://github.com/Exit-9B/BethesdaCMakeModules.git
-[submodule "tools/SKSE-CMakeModules"]
-	path = tools/SKSE-CMakeModules
-	url = https://github.com/Exit-9B/SKSE-CMakeModules.git
+[submodule "lib/commonlibsse-ng"]
+	path = lib/commonlibsse-ng
+	url = https://github.com/alandtse/CommonLibVR.git
+	branch = ng
