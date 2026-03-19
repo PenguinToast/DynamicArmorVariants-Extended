@@ -14,7 +14,10 @@ public:
 	static auto GetSingleton() -> DynamicArmorManager*;
 
 	void RegisterArmorVariant(std::string_view a_name, ArmorVariant&& a_variant);
+	void ReplaceArmorVariant(std::string_view a_name, ArmorVariant&& a_variant);
+	auto DeleteArmorVariant(std::string_view a_name) -> bool;
 	void SetCondition(std::string_view a_state, std::shared_ptr<RE::TESCondition> a_condition);
+	void ClearCondition(std::string_view a_state);
 
 	void VisitArmorAddons(
 		RE::Actor* a_actor,

@@ -33,6 +33,6 @@ target("DynamicArmorVariants")
     })
 
     add_files("src/**.cpp")
-    add_headerfiles("src/**.h")
-    add_includedirs("src", "src/main", "src/PCH")
+    add_headerfiles("src/**.h", "include/**.h")
+    add_includedirs("src", "src/main", "src/PCH", "include")
     set_pcxxheader("src/PCH/PCH.h")

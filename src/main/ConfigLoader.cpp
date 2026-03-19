@@ -2,6 +2,167 @@
 #include "DynamicArmorManager.h"
 #include "FormUtil.h"
 
+auto ConfigLoader::ParseJson(std::string_view a_jsonText, Json::Value& a_root) -> bool
+{
+	Json::CharReaderBuilder builder;
+	const auto reader = std::unique_ptr<Json::CharReader>(builder.newCharReader());
+
+	std::string errors;
+	if (!reader->parse(
+			a_jsonText.data(),
+			a_jsonText.data() + a_jsonText.size(),
+			std::addressof(a_root),
+			std::addressof(errors))) {
+		logger::error("Failed to parse JSON payload: {}"sv, errors);
+		return false;
+	}
+
+	return true;
+}
+
+auto ConfigLoader::BuildRefMap(const Json::Value& a_refs) -> ConditionParser::RefMap
+{
+	ConditionParser::RefMap refMap;
+	refMap["PLAYER"s] = RE::PlayerCharacter::GetSingleton();
+
+	if (!a_refs.isObject()) {
+		return refMap;
+	}
+
+	for (auto& name : a_refs.getMemberNames()) {
+		auto identifier = a_refs[name].asString();
+
+		if (auto form = FormUtil::LookupByIdentifier(identifier)) {
+			refMap[util::str_toupper(name)] = form;
+		}
+	}
+
+	return refMap;
+}
+
+auto ConfigLoader::ParseOverrideOption(const Json::Value& a_overrideHead) -> ArmorVariant::OverrideOption
+{
+	if (!a_overrideHead.isString()) {
+		return ArmorVariant::OverrideOption::Undefined;
+	}
+
+	if (a_overrideHead == "none"s) {
+		return ArmorVariant::OverrideOption::None;
+	}
+	if (a_overrideHead == "showAll"s) {
+		return ArmorVariant::OverrideOption::ShowAll;
+	}
+	if (a_overrideHead == "showHead"s) {
+		return ArmorVariant::OverrideOption::ShowHead;
+	}
+	if (a_overrideHead == "hideHair"s) {
+		return ArmorVariant::OverrideOption::HideHair;
+	}
+	if (a_overrideHead == "hideAll"s) {
+		return ArmorVariant::OverrideOption::HideAll;
+	}
+
+	return ArmorVariant::OverrideOption::Undefined;
+}
+
+auto ConfigLoader::BuildArmorVariant(const Json::Value& a_variantJson, ArmorVariant& a_variant) -> bool
+{
+	if (!a_variantJson.isObject()) {
+		return false;
+	}
+
+	a_variant.Linked = a_variantJson["linkTo"].asString();
+	a_variant.DisplayName = a_variantJson["displayName"].asString();
+	a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
+
+	LoadFormMap(a_variantJson["replaceByForm"], a_variant.ReplaceByForm);
+	LoadSlotMap(a_variantJson["replaceBySlot"], a_variant.ReplaceBySlot);
+	return true;
+}
+
+auto ConfigLoader::NormalizeConditionsPayload(
+	const Json::Value& a_root,
+	Json::Value& a_conditions,
+	Json::Value& a_refs) -> bool
+{
+	if (a_root.isArray()) {
+		a_conditions = a_root;
+		return true;
+	}
+
+	if (a_root.isObject()) {
+		a_conditions = a_root["conditions"];
+		a_refs = a_root["refs"];
+		if (a_conditions.isArray()) {
+			return true;
+		}
+
+		logger::error("Condition JSON must contain a conditions array"sv);
+		return false;
+	}
+
+	logger::error("Condition JSON must be an array or object"sv);
+	return false;
+}
+
+auto ConfigLoader::RegisterVariantJson(std::string_view a_name, std::string_view a_variantJson) -> bool
+{
+	Json::Value root;
+	if (!ParseJson(a_variantJson, root) || !root.isObject()) {
+		return false;
+	}
+
+	auto variantName = std::string(a_name);
+	if (variantName.empty()) {
+		variantName = root["name"].asString();
+	}
+
+	if (variantName.empty()) {
+		logger::error("RegisterVariantJson requires a variant name"sv);
+		return false;
+	}
+
+	ArmorVariant armorVariant{};
+	if (!BuildArmorVariant(root, armorVariant)) {
+		return false;
+	}
+
+	DynamicArmorManager::GetSingleton()->ReplaceArmorVariant(variantName, std::move(armorVariant));
+	return true;
+}
+
+auto ConfigLoader::DeleteVariant(std::string_view a_name) -> bool
+{
+	if (a_name.empty()) {
+		return false;
+	}
+
+	return DynamicArmorManager::GetSingleton()->DeleteArmorVariant(a_name);
+}
+
+auto ConfigLoader::SetVariantConditionsJson(std::string_view a_variant, std::string_view a_conditionsJson) -> bool
+{
+	if (a_variant.empty()) {
+		logger::error("SetVariantConditionsJson requires a variant name"sv);
+		return false;
+	}
+
+	Json::Value root;
+	if (!ParseJson(a_conditionsJson, root)) {
+		return false;
+	}
+
+	Json::Value conditions;
+	Json::Value refs;
+	if (!NormalizeConditionsPayload(root, conditions, refs)) {
+		return false;
+	}
+
+	DynamicArmorManager::GetSingleton()->ClearCondition(a_variant);
+	LoadConditions(a_variant, conditions, BuildRefMap(refs));
+	return true;
+}
+
 void ConfigLoader::LoadConfigs()
 {
 	const auto dataHandler = RE::TESDataHandler::GetSingleton();
@@ -51,59 +212,17 @@ void ConfigLoader::LoadConfig(fs::path a_path)
 	if (states.isArray()) {
 		for (auto& state : states) {
 			auto variant = state["variant"].asString();
-
-			ConditionParser::RefMap refMap;
-			refMap["PLAYER"s] = RE::PlayerCharacter::GetSingleton();
-
-			Json::Value refs = state["refs"];
-
-			if (refs.isObject()) {
-				for (auto& name : refs.getMemberNames()) {
-					auto identifier = refs[name].asString();
-
-					if (auto form = FormUtil::LookupByIdentifier(identifier)) {
-						auto name_upper = util::str_toupper(name);
-						refMap[name_upper] = form;
-					}
-				}
-			}
-
-			LoadConditions(variant, state["conditions"], refMap);
+			LoadConditions(variant, state["conditions"], BuildRefMap(state["refs"]));
 		}
 	}
 }
 
 void ConfigLoader::LoadVariant(std::string_view a_name, Json::Value a_variant)
 {
-	if (!a_variant.isObject())
-		return;
-
 	ArmorVariant armorVariant{};
-
-	armorVariant.Linked = a_variant["linkTo"].asString();
-	armorVariant.DisplayName = a_variant["displayName"].asString();
-
-	auto& overrideHead = a_variant["overrideHead"];
-	if (overrideHead.isString()) {
-		if (overrideHead == "none"s) {
-			armorVariant.OverrideHead = ArmorVariant::OverrideOption::None;
-		}
-		else if (overrideHead == "showAll"s) {
-			armorVariant.OverrideHead = ArmorVariant::OverrideOption::ShowAll;
-		}
-		else if (overrideHead == "showHead"s) {
-			armorVariant.OverrideHead = ArmorVariant::OverrideOption::ShowHead;
-		}
-		else if (overrideHead == "hideHair"s) {
-			armorVariant.OverrideHead = ArmorVariant::OverrideOption::HideHair;
-		}
-		else if (overrideHead == "hideAll"s) {
-			armorVariant.OverrideHead = ArmorVariant::OverrideOption::HideAll;
-		}
+	if (!BuildArmorVariant(a_variant, armorVariant)) {
+		return;
 	}
-
-	LoadFormMap(a_variant["replaceByForm"], armorVariant.ReplaceByForm);
-	LoadSlotMap(a_variant["replaceBySlot"], armorVariant.ReplaceBySlot);
 
 	DynamicArmorManager::GetSingleton()->RegisterArmorVariant(a_name, std::move(armorVariant));
 }

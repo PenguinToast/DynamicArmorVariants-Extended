@@ -38,11 +38,33 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name, ArmorVar
 	}
 }
 
+void DynamicArmorManager::ReplaceArmorVariant(std::string_view a_name, ArmorVariant&& a_variant)
+{
+	_variants.insert_or_assign(std::string(a_name), std::move(a_variant));
+}
+
+auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool
+{
+	const auto erased = _variants.erase(std::string(a_name)) > 0;
+	_conditions.erase(std::string(a_name));
+
+	for (auto& [formID, overrides] : _variantOverrides) {
+		overrides.erase(std::string(a_name));
+	}
+
+	return erased;
+}
+
 void DynamicArmorManager::SetCondition(
 	std::string_view a_state,
 	std::shared_ptr<RE::TESCondition> a_condition)
 {
 	_conditions.insert_or_assign(std::string(a_state), a_condition);
+}
+
+void DynamicArmorManager::ClearCondition(std::string_view a_state)
+{
+	_conditions.erase(std::string(a_state));
 }
 
 void DynamicArmorManager::VisitArmorAddons(
