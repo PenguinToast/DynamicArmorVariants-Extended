@@ -120,14 +120,13 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor* a_actor, RE::TESObjectA
 		}
 
 		const auto& resolution = GetOrBuildArmorAddonResolution(a_actor, armorAddon);
-		if (resolution.ActiveVariantState.empty()) {
+		if (!resolution.ActiveVariant) {
 			continue;
 		}
 
-		if (const auto it = _variants.find(resolution.ActiveVariantState); it != _variants.end() &&
-		    util::to_underlying(it->second.OverrideHead) >
+		if (util::to_underlying(resolution.ActiveVariant->OverrideHead) >
 			    util::to_underlying(overrideOption)) {
-			overrideOption = it->second.OverrideHead;
+			overrideOption = resolution.ActiveVariant->OverrideHead;
 		}
 	}
 
@@ -194,38 +193,40 @@ auto DynamicArmorManager::BuildArmorAddonResolution(RE::Actor* a_actor, RE::TESO
 		return resolution;
 	}
 
+	std::unordered_map<std::string_view, const ArmorVariant::AddonList*> linkedAddonLists;
 	const ArmorVariant::AddonList* stateAddonList = nullptr;
 	const ArmorVariant::AddonList* linkedAddonList = nullptr;
+	std::string activeVariantState;
 
 	for (auto& [name, variant] : _variants) {
-		if (!variant.WouldReplace(a_armorAddon)) {
+		const auto* addonList = variant.GetAddonList(a_armorAddon);
+		if (!addonList) {
 			continue;
+		}
+
+		if (!variant.Linked.empty()) {
+			linkedAddonLists.insert_or_assign(variant.Linked, addonList);
+			if (variant.Linked == activeVariantState) {
+				linkedAddonList = addonList;
+			}
 		}
 
 		if (!IsUsingVariant(a_actor, name)) {
 			continue;
 		}
 
-		resolution.ActiveVariantState = name;
+		activeVariantState = name;
+		resolution.ActiveVariant = std::addressof(variant);
+		stateAddonList = addonList;
+		if (const auto it = linkedAddonLists.find(activeVariantState); it != linkedAddonLists.end()) {
+			linkedAddonList = it->second;
+		} else {
+			linkedAddonList = nullptr;
+		}
 	}
 
-	if (resolution.ActiveVariantState.empty()) {
+	if (!resolution.ActiveVariant) {
 		return resolution;
-	}
-
-	for (auto& [name, variant] : _variants) {
-		auto addonList = variant.GetAddonList(a_armorAddon);
-		if (!addonList) {
-			continue;
-		}
-
-		if (name == resolution.ActiveVariantState && !stateAddonList) {
-			stateAddonList = addonList;
-		}
-
-		if (variant.Linked == resolution.ActiveVariantState) {
-			linkedAddonList = addonList;
-		}
 	}
 
 	resolution.ResolvedAddonList = linkedAddonList ? linkedAddonList : stateAddonList;

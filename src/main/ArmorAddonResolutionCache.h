@@ -3,7 +3,6 @@
 #include "ArmorVariant.h"
 
 #include <list>
-#include <string>
 #include <unordered_map>
 
 class ArmorAddonResolutionCache
@@ -19,7 +18,7 @@ public:
 
 	struct Value
 	{
-		std::string ActiveVariantState;
+		const ArmorVariant* ActiveVariant{ nullptr };
 		const ArmorVariant::AddonList* ResolvedAddonList{ nullptr };
 	};
 
