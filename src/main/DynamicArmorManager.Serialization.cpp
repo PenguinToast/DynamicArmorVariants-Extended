@@ -1,8 +1,11 @@
 #include "DynamicArmorManager.h"
 #include "Json.h"
 
+#include <mutex>
+
 void DynamicArmorManager::Serialize(SKSE::SerializationInterface* a_skse)
 {
+	std::shared_lock lock(_stateMutex);
 	Json::StreamWriterBuilder builder;
 	builder["commentStyle"] = "None";
 	builder["indentation"] = "";
@@ -39,6 +42,7 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface* a_skse)
 
 void DynamicArmorManager::Deserialize(SKSE::SerializationInterface* a_skse)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	std::uint32_t type;
 	std::uint32_t version;
@@ -106,6 +110,7 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface* a_skse)
 
 void DynamicArmorManager::Revert()
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_variantOverrides.clear();
 }

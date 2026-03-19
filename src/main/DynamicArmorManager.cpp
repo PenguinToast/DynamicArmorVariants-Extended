@@ -1,6 +1,8 @@
 #include "DynamicArmorManager.h"
 #include "Ext/Actor.h"
 
+#include <mutex>
+
 auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager*
 {
 	static DynamicArmorManager singleton{};
@@ -9,6 +11,7 @@ auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager*
 
 void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name, ArmorVariant&& a_variant)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	auto [it, inserted] = _variants.try_emplace(std::string(a_name), std::move(a_variant));
 
@@ -41,12 +44,14 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name, ArmorVar
 
 void DynamicArmorManager::ReplaceArmorVariant(std::string_view a_name, ArmorVariant&& a_variant)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_variants.insert_or_assign(std::string(a_name), std::move(a_variant));
 }
 
 auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	const auto erased = _variants.erase(std::string(a_name)) > 0;
 	_conditions.erase(std::string(a_name));
@@ -62,12 +67,14 @@ void DynamicArmorManager::SetCondition(
 	std::string_view a_state,
 	std::shared_ptr<RE::TESCondition> a_condition)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_conditions.insert_or_assign(std::string(a_state), a_condition);
 }
 
 void DynamicArmorManager::ClearCondition(std::string_view a_state)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_conditions.erase(std::string(a_state));
 }
@@ -80,6 +87,7 @@ void DynamicArmorManager::VisitArmorAddons(
 	// Observed from player-side runtime logs during equip/variant changes:
 	// VisitArmorAddons runs before GetBipedObjectSlots, and Skyrim often performs
 	// another VisitArmorAddons pass immediately after the slot-mask evaluation.
+	std::unique_lock lock(_stateMutex);
 	if (Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
 		a_visit(a_armorAddon);
 		return;
@@ -99,6 +107,7 @@ void DynamicArmorManager::VisitArmorAddons(
 auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor* a_actor, RE::TESObjectARMO* a_armor) const
 	-> BipedObjectSlot
 {
+	std::unique_lock lock(_stateMutex);
 	if (!a_armor)
 		return BipedObjectSlot::kNone;
 
@@ -151,16 +160,18 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor* a_actor, RE::TESObjectA
 	return slot.get();
 }
 
-auto DynamicArmorManager::IsUsingVariant(RE::Actor* a_actor, std::string a_state) const -> bool
+auto DynamicArmorManager::IsUsingVariantLocked(RE::Actor* a_actor, std::string_view a_state) const -> bool
 {
+	const auto state = std::string(a_state);
+
 	if (auto it = _variantOverrides.find(a_actor->GetFormID()); it != _variantOverrides.end()) {
 
-		if (it->second.contains(a_state)) {
+		if (it->second.contains(state)) {
 			return true;
 		}
 	}
 
-	if (auto it = _conditions.find(a_state); it != _conditions.end()) {
+	if (auto it = _conditions.find(state); it != _conditions.end()) {
 		auto& condition = it->second;
 		return condition ? condition->IsTrue(a_actor, a_actor) : false;
 	}
@@ -170,7 +181,7 @@ auto DynamicArmorManager::IsUsingVariant(RE::Actor* a_actor, std::string a_state
 }
 
 auto DynamicArmorManager::GetOrBuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const
-	-> const ArmorAddonResolutionCache::Value&
+	-> ArmorAddonResolutionCache::Value
 {
 	const ArmorAddonResolutionCache::Key key{
 		.ActorFormID = a_actor ? a_actor->GetFormID() : 0,
@@ -211,7 +222,7 @@ auto DynamicArmorManager::BuildArmorAddonResolution(RE::Actor* a_actor, RE::TESO
 			}
 		}
 
-		if (!IsUsingVariant(a_actor, name)) {
+		if (!IsUsingVariantLocked(a_actor, name)) {
 			continue;
 		}
 
@@ -239,6 +250,12 @@ void DynamicArmorManager::ClearArmorAddonResolutionCache() const
 }
 
 auto DynamicArmorManager::GetVariants(RE::TESObjectARMO* a_armor) const -> std::vector<std::string>
+{
+	std::shared_lock lock(_stateMutex);
+	return GetVariantsLocked(a_armor);
+}
+
+auto DynamicArmorManager::GetVariantsLocked(RE::TESObjectARMO* a_armor) const -> std::vector<std::string>
 {
 	std::vector<std::string> result;
 
@@ -275,6 +292,7 @@ auto DynamicArmorManager::GetVariants(RE::TESObjectARMO* a_armor) const -> std::
 auto DynamicArmorManager::GetEquippedArmorsWithVariants(RE::Actor* a_actor)
 	-> std::vector<RE::TESObjectARMO*>
 {
+	std::shared_lock lock(_stateMutex);
 	std::vector<RE::TESObjectARMO*> resultVector;
 	resultVector.reserve(32);
 
@@ -286,7 +304,7 @@ auto DynamicArmorManager::GetEquippedArmorsWithVariants(RE::Actor* a_actor)
 
 		std::vector<std::string> variants;
 		if (auto armor = a_actor->GetWornArmor(slot)) {
-			variants = GetVariants(armor);
+			variants = GetVariantsLocked(armor);
 			if (!variants.empty()) {
 				if (resultSet.insert(armor).second) {
 					resultVector.push_back(armor);
@@ -300,6 +318,7 @@ auto DynamicArmorManager::GetEquippedArmorsWithVariants(RE::Actor* a_actor)
 
 auto DynamicArmorManager::GetDisplayName(const std::string& a_variant) const -> std::string
 {
+	std::shared_lock lock(_stateMutex);
 	if (auto it = _variants.find(a_variant); it != _variants.end()) {
 		return it->second.DisplayName;
 	}
@@ -309,6 +328,7 @@ auto DynamicArmorManager::GetDisplayName(const std::string& a_variant) const -> 
 
 void DynamicArmorManager::ApplyVariant(RE::Actor* a_actor, const std::string& a_variant)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	// Find variant definition
 	auto it = _variants.find(a_variant);
@@ -370,6 +390,7 @@ void DynamicArmorManager::ApplyVariant(
 	const RE::TESObjectARMO* a_armor,
 	const std::string& a_variant)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	// Find variant definition
 	auto it = _variants.find(a_variant);
@@ -409,6 +430,7 @@ void DynamicArmorManager::ApplyVariant(
 
 void DynamicArmorManager::ResetVariant(RE::Actor* a_actor, const RE::TESObjectARMO* a_armor)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	auto it = _variantOverrides.find(a_actor->GetFormID());
 	if (it == _variantOverrides.end())
@@ -429,6 +451,7 @@ void DynamicArmorManager::ResetVariant(RE::Actor* a_actor, const RE::TESObjectAR
 
 void DynamicArmorManager::ResetAllVariants(RE::Actor* a_actor)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_variantOverrides.erase(a_actor->GetFormID());
 	Ext::Actor::Update3DSafe(a_actor);
@@ -436,6 +459,7 @@ void DynamicArmorManager::ResetAllVariants(RE::Actor* a_actor)
 
 void DynamicArmorManager::ResetAllVariants(RE::FormID a_formID)
 {
+	std::unique_lock lock(_stateMutex);
 	ClearArmorAddonResolutionCache();
 	_variantOverrides.erase(a_formID);
 }

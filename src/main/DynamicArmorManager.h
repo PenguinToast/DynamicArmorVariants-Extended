@@ -4,6 +4,7 @@
 #include "ArmorVariant.h"
 
 #include <chrono>
+#include <shared_mutex>
 #include <unordered_set>
 
 class DynamicArmorManager
@@ -64,14 +65,16 @@ private:
 
 	DynamicArmorManager() = default;
 
-	auto IsUsingVariant(RE::Actor* a_actor, std::string a_state) const -> bool;
-	auto GetOrBuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const -> const ArmorAddonResolutionCache::Value&;
+	auto IsUsingVariantLocked(RE::Actor* a_actor, std::string_view a_state) const -> bool;
+	auto GetOrBuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const -> ArmorAddonResolutionCache::Value;
 	auto BuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const -> ArmorAddonResolutionCache::Value;
 	void ClearArmorAddonResolutionCache() const;
+	auto GetVariantsLocked(RE::TESObjectARMO* a_armor) const -> std::vector<std::string>;
 
 	tsl::ordered_map<std::string, ArmorVariant> _variants;
 
 	std::unordered_map<std::string, std::shared_ptr<RE::TESCondition>> _conditions;
 	std::unordered_map<RE::FormID, std::unordered_set<std::string>> _variantOverrides;
 	mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{ ArmorAddonResolutionCacheCapacity, ArmorAddonResolutionCacheTtl };
+	mutable std::shared_mutex _stateMutex;
 };
