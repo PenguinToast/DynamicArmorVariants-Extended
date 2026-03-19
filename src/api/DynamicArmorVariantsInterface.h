@@ -15,6 +15,7 @@ public:
 	bool RegisterVariantJson(const char* a_name, const char* a_variantJson) override;
 	bool DeleteVariant(const char* a_name) override;
 	bool SetVariantConditionsJson(const char* a_name, const char* a_conditionsJson) override;
+	bool RefreshActor(RE::Actor* a_actor) override;
 
 	static void SetReady(bool a_ready);
 	static void HandleInterfaceRequest(SKSE::MessagingInterface::Message* a_msg);

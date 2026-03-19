@@ -1,6 +1,7 @@
 #include "DynamicArmorVariantsInterface.h"
 
 #include "ConfigLoader.h"
+#include "Ext/Actor.h"
 
 namespace
 {
@@ -37,6 +38,16 @@ bool DynamicArmorVariantsInterface::SetVariantConditionsJson(const char* a_name,
 	}
 
 	return ConfigLoader::SetVariantConditionsJson(a_name, a_conditionsJson);
+}
+
+bool DynamicArmorVariantsInterface::RefreshActor(RE::Actor* a_actor)
+{
+	if (!IsReady() || !a_actor) {
+		return false;
+	}
+
+	Ext::Actor::Update3DSafe(a_actor);
+	return true;
 }
 
 void DynamicArmorVariantsInterface::SetReady(bool a_ready)
