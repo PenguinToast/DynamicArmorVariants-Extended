@@ -42,6 +42,9 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 	logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
 	SKSE::Init(a_skse);
+	SKSE::GetMessagingInterface()->RegisterListener(nullptr, [](SKSE::MessagingInterface::Message* a_message) {
+		DynamicArmorVariantsInterface::HandleInterfaceRequest(a_message);
+	});
 
 	Hooks::Install();
 
@@ -58,11 +61,6 @@ extern "C" DLLEXPORT bool SKSEAPI SKSEPlugin_Load(const SKSE::LoadInterface* a_s
 		[](auto a_msg)
 		{
 			switch (a_msg->type) {
-			case SKSE::MessagingInterface::kPostLoad:
-				SKSE::GetMessagingInterface()->RegisterListener(nullptr, [](SKSE::MessagingInterface::Message* a_message) {
-					DynamicArmorVariantsInterface::HandleInterfaceRequest(a_message);
-				});
-				break;
 			case SKSE::MessagingInterface::kDataLoaded:
 				ConfigLoader::LoadConfigs();
 				DynamicArmorVariantsInterface::SetReady(true);
