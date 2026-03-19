@@ -120,9 +120,8 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor* a_actor, RE::TESObjectA
 	if (!race)
 		return slot.get();
 
-	if (Ext::Actor::IsSkin(a_actor, a_armor)) {
+	if (Ext::Actor::IsSkin(a_actor, a_armor))
 		return slot.get();
-	}
 
 	auto overrideOption = ArmorVariant::OverrideOption::None;
 
