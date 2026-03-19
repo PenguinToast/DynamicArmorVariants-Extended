@@ -3,6 +3,7 @@
 #include "ArmorAddonResolutionCache.h"
 #include "ArmorVariant.h"
 
+#include <chrono>
 #include <unordered_set>
 
 class DynamicArmorManager
@@ -59,6 +60,7 @@ private:
 	static constexpr std::uint32_t SerializationVersion = 1;
 	static constexpr std::uint32_t SerializationType = 'AAVO';
 	static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
+	static constexpr auto ArmorAddonResolutionCacheTtl = std::chrono::milliseconds(500);
 
 	DynamicArmorManager() = default;
 
@@ -71,5 +73,5 @@ private:
 
 	std::unordered_map<std::string, std::shared_ptr<RE::TESCondition>> _conditions;
 	std::unordered_map<RE::FormID, std::unordered_set<std::string>> _variantOverrides;
-	mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{ ArmorAddonResolutionCacheCapacity };
+	mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{ ArmorAddonResolutionCacheCapacity, ArmorAddonResolutionCacheTtl };
 };

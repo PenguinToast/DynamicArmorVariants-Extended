@@ -2,6 +2,7 @@
 
 #include "ArmorVariant.h"
 
+#include <chrono>
 #include <list>
 #include <unordered_map>
 
@@ -24,6 +25,8 @@ public:
 
 	explicit ArmorAddonResolutionCache(std::size_t a_capacity) :
 		_capacity(a_capacity) {}
+	ArmorAddonResolutionCache(std::size_t a_capacity, std::chrono::milliseconds a_ttl) :
+		_capacity(a_capacity), _ttl(a_ttl) {}
 
 	auto Find(const Key& a_key) -> const Value*;
 	void Insert(Key a_key, Value a_value);
@@ -38,6 +41,7 @@ private:
 	struct Entry
 	{
 		Value Value;
+		std::chrono::steady_clock::time_point ExpiresAt;
 		std::list<Key>::iterator LruIt;
 	};
 
@@ -46,6 +50,7 @@ private:
 		std::unordered_map<Key, Entry, KeyHash>::iterator a_it);
 
 	std::size_t _capacity;
+	std::chrono::milliseconds _ttl{ 0 };
 	std::list<Key> _lru;
 	std::unordered_map<Key, Entry, KeyHash> _entries;
 };

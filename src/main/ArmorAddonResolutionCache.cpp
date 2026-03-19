@@ -3,6 +3,12 @@
 auto ArmorAddonResolutionCache::Find(const Key& a_key) -> const Value*
 {
 	if (auto it = _entries.find(a_key); it != _entries.end()) {
+		if (_ttl.count() > 0 && std::chrono::steady_clock::now() >= it->second.ExpiresAt) {
+			_lru.erase(it->second.LruIt);
+			_entries.erase(it);
+			return nullptr;
+		}
+
 		Touch(a_key, it);
 		return &it->second.Value;
 	}
@@ -23,6 +29,7 @@ void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value)
 		a_key,
 		Entry{
 			.Value = std::move(a_value),
+			.ExpiresAt = std::chrono::steady_clock::now() + _ttl,
 			.LruIt = _lru.begin()
 		});
 
