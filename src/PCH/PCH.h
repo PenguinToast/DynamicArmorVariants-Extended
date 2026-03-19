@@ -27,47 +27,38 @@ namespace logger = SKSE::log;
 using BipedObject = RE::BIPED_OBJECTS::BIPED_OBJECT;
 using BipedObjectSlot = RE::BIPED_MODEL::BipedObjectSlot;
 
-namespace util
-{
-	using SKSE::stl::enumeration;
-	using SKSE::stl::report_and_fail;
-	using std::to_underlying;
+namespace util {
+using SKSE::stl::enumeration;
+using SKSE::stl::report_and_fail;
+using std::to_underlying;
 
-	inline std::string str_toupper(std::string s)
-	{
-		std::transform(
-			s.begin(),
-			s.end(),
-			s.begin(),
-			[](unsigned char c)
-			{
-				return static_cast<char>(std::toupper(c));
-			});
-		return s;
-	}
-
-	inline auto MakeHook(REL::ID a_id, std::ptrdiff_t a_offset = 0)
-	{
-		return REL::Relocation<std::uintptr_t>(a_id, a_offset);
-	}
-
-	inline auto MakeHook(REL::VariantID a_id, std::ptrdiff_t a_offset = 0)
-	{
-		return REL::Relocation<std::uintptr_t>(a_id.address() + a_offset);
-	}
-
-	inline auto MakeHook(REL::Offset a_address, std::ptrdiff_t a_offset = 0)
-	{
-		return REL::Relocation<std::uintptr_t>(a_address.address() + a_offset);
-	}
-
-	inline auto MakeHook(REL::VariantOffset a_address, std::ptrdiff_t a_offset = 0)
-	{
-		return REL::Relocation<std::uintptr_t>(a_address.address() + a_offset);
-	}
+inline std::string str_toupper(std::string s) {
+  std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+    return static_cast<char>(std::toupper(c));
+  });
+  return s;
 }
 
-#define MAKE_OFFSET(a_idSE, a_offsetVR) REL::VariantID((a_idSE), (a_idSE), (a_offsetVR))
+inline auto MakeHook(REL::ID a_id, std::ptrdiff_t a_offset = 0) {
+  return REL::Relocation<std::uintptr_t>(a_id, a_offset);
+}
+
+inline auto MakeHook(REL::VariantID a_id, std::ptrdiff_t a_offset = 0) {
+  return REL::Relocation<std::uintptr_t>(a_id.address() + a_offset);
+}
+
+inline auto MakeHook(REL::Offset a_address, std::ptrdiff_t a_offset = 0) {
+  return REL::Relocation<std::uintptr_t>(a_address.address() + a_offset);
+}
+
+inline auto MakeHook(REL::VariantOffset a_address,
+                     std::ptrdiff_t a_offset = 0) {
+  return REL::Relocation<std::uintptr_t>(a_address.address() + a_offset);
+}
+} // namespace util
+
+#define MAKE_OFFSET(a_idSE, a_offsetVR)                                        \
+  REL::VariantID((a_idSE), (a_idSE), (a_offsetVR))
 
 #define DLLEXPORT __declspec(dllexport)
 

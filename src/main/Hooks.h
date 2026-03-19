@@ -1,17 +1,15 @@
 #pragma once
 
-class Hooks
-{
+class Hooks {
 public:
-	Hooks() = delete;
+  Hooks() = delete;
 
-	static void Install();
+  static void Install();
 
 private:
-	static void InitWornArmor(
-		RE::TESObjectARMO* a_armor,
-		RE::Actor* a_actor,
-		RE::BSTSmartPointer<RE::BipedAnim>* a_biped);
+  static void InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
+                            RE::BSTSmartPointer<RE::BipedAnim> *a_biped);
 
-	static auto GetWornMask(RE::InventoryChanges* a_inventoryChanges) -> BipedObjectSlot;
+  static auto GetWornMask(RE::InventoryChanges *a_inventoryChanges)
+      -> BipedObjectSlot;
 };

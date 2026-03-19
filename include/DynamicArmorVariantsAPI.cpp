@@ -1,25 +1,27 @@
 #include "DynamicArmorVariantsAPI.h"
 
-DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001* g_DynamicArmorVariantsInterface = nullptr;
+DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001
+    *g_DynamicArmorVariantsInterface = nullptr;
 
-DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001* DynamicArmorVariantsAPI::GetDynamicArmorVariantsInterface001()
-{
-	if (g_DynamicArmorVariantsInterface) {
-		return g_DynamicArmorVariantsInterface;
-	}
+DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001 *
+DynamicArmorVariantsAPI::GetDynamicArmorVariantsInterface001() {
+  if (g_DynamicArmorVariantsInterface) {
+    return g_DynamicArmorVariantsInterface;
+  }
 
-	DynamicArmorVariantsMessage message;
-	const auto messaging = SKSE::GetMessagingInterface();
-	messaging->Dispatch(
-		DynamicArmorVariantsMessage::kMessage_QueryInterface,
-		std::addressof(message),
-		sizeof(DynamicArmorVariantsMessage),
-		DynamicArmorVariantsPluginName);
+  DynamicArmorVariantsMessage message;
+  const auto messaging = SKSE::GetMessagingInterface();
+  messaging->Dispatch(DynamicArmorVariantsMessage::kMessage_QueryInterface,
+                      std::addressof(message),
+                      sizeof(DynamicArmorVariantsMessage),
+                      DynamicArmorVariantsPluginName);
 
-	if (!message.GetApiFunction) {
-		return nullptr;
-	}
+  if (!message.GetApiFunction) {
+    return nullptr;
+  }
 
-	g_DynamicArmorVariantsInterface = static_cast<IDynamicArmorVariantsInterface001*>(message.GetApiFunction(1));
-	return g_DynamicArmorVariantsInterface;
+  g_DynamicArmorVariantsInterface =
+      static_cast<IDynamicArmorVariantsInterface001 *>(
+          message.GetApiFunction(1));
+  return g_DynamicArmorVariantsInterface;
 }

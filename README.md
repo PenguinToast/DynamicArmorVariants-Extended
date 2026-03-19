@@ -39,6 +39,17 @@ The default deploy mode is `releasedbg`, so the script also deploys `DynamicArmo
 
 The deploy step copies the built DLL, the repository `data/` tree, and the existing `DynamicArmor*.pex` scripts from `/mnt/f/games/skyrim/modlists/pt_test/mods/Dynamic Armor Variants/Scripts`. Set `PAPYRUS_SOURCE_MOD_DIR` to override that source mod path.
 
+## Lint And Format
+```bash
+./scripts/format.sh
+./scripts/format.sh --check
+./scripts/lint.sh
+./scripts/lint.sh src/main/DynamicArmorManager.cpp
+```
+
+From WSL, the scripts prefer Linux `clang-format` / `clang-tidy` when available and otherwise
+fall back to the Visual Studio LLVM tools installed on Windows.
+
 ## Public API
 DAV-NG exposes a versioned SKSE messaging API modeled after Modex.
 

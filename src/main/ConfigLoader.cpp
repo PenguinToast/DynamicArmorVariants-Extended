@@ -2,337 +2,325 @@
 #include "DynamicArmorManager.h"
 #include "FormUtil.h"
 
-auto ConfigLoader::ParseJson(std::string_view a_jsonText, Json::Value& a_root) -> bool
-{
-	Json::CharReaderBuilder builder;
-	const auto reader = std::unique_ptr<Json::CharReader>(builder.newCharReader());
+auto ConfigLoader::ParseJson(std::string_view a_jsonText, Json::Value &a_root)
+    -> bool {
+  Json::CharReaderBuilder builder;
+  const auto reader =
+      std::unique_ptr<Json::CharReader>(builder.newCharReader());
 
-	std::string errors;
-	if (!reader->parse(
-			a_jsonText.data(),
-			a_jsonText.data() + a_jsonText.size(),
-			std::addressof(a_root),
-			std::addressof(errors))) {
-		logger::error("Failed to parse JSON payload: {}"sv, errors);
-		return false;
-	}
+  std::string errors;
+  if (!reader->parse(a_jsonText.data(), a_jsonText.data() + a_jsonText.size(),
+                     std::addressof(a_root), std::addressof(errors))) {
+    logger::error("Failed to parse JSON payload: {}"sv, errors);
+    return false;
+  }
 
-	return true;
+  return true;
 }
 
-auto ConfigLoader::BuildRefMap(const Json::Value& a_refs) -> ConditionParser::RefMap
-{
-	ConditionParser::RefMap refMap;
-	refMap["PLAYER"s] = RE::PlayerCharacter::GetSingleton();
+auto ConfigLoader::BuildRefMap(const Json::Value &a_refs)
+    -> ConditionParser::RefMap {
+  ConditionParser::RefMap refMap;
+  refMap["PLAYER"s] = RE::PlayerCharacter::GetSingleton();
 
-	if (!a_refs.isObject()) {
-		return refMap;
-	}
+  if (!a_refs.isObject()) {
+    return refMap;
+  }
 
-	for (auto& name : a_refs.getMemberNames()) {
-		auto identifier = a_refs[name].asString();
+  for (auto &name : a_refs.getMemberNames()) {
+    auto identifier = a_refs[name].asString();
 
-		if (auto form = FormUtil::LookupByIdentifier(identifier)) {
-			refMap[util::str_toupper(name)] = form;
-		}
-	}
+    if (auto form = FormUtil::LookupByIdentifier(identifier)) {
+      refMap[util::str_toupper(name)] = form;
+    }
+  }
 
-	return refMap;
+  return refMap;
 }
 
-auto ConfigLoader::ParseOverrideOption(const Json::Value& a_overrideHead) -> ArmorVariant::OverrideOption
-{
-	if (!a_overrideHead.isString()) {
-		return ArmorVariant::OverrideOption::Undefined;
-	}
+auto ConfigLoader::ParseOverrideOption(const Json::Value &a_overrideHead)
+    -> ArmorVariant::OverrideOption {
+  if (!a_overrideHead.isString()) {
+    return ArmorVariant::OverrideOption::Undefined;
+  }
 
-	if (a_overrideHead == "none"s) {
-		return ArmorVariant::OverrideOption::None;
-	}
-	if (a_overrideHead == "showAll"s) {
-		return ArmorVariant::OverrideOption::ShowAll;
-	}
-	if (a_overrideHead == "showHead"s) {
-		return ArmorVariant::OverrideOption::ShowHead;
-	}
-	if (a_overrideHead == "hideHair"s) {
-		return ArmorVariant::OverrideOption::HideHair;
-	}
-	if (a_overrideHead == "hideAll"s) {
-		return ArmorVariant::OverrideOption::HideAll;
-	}
+  if (a_overrideHead == "none"s) {
+    return ArmorVariant::OverrideOption::None;
+  }
+  if (a_overrideHead == "showAll"s) {
+    return ArmorVariant::OverrideOption::ShowAll;
+  }
+  if (a_overrideHead == "showHead"s) {
+    return ArmorVariant::OverrideOption::ShowHead;
+  }
+  if (a_overrideHead == "hideHair"s) {
+    return ArmorVariant::OverrideOption::HideHair;
+  }
+  if (a_overrideHead == "hideAll"s) {
+    return ArmorVariant::OverrideOption::HideAll;
+  }
 
-	return ArmorVariant::OverrideOption::Undefined;
+  return ArmorVariant::OverrideOption::Undefined;
 }
 
-auto ConfigLoader::BuildArmorVariant(const Json::Value& a_variantJson, ArmorVariant& a_variant) -> bool
-{
-	if (!a_variantJson.isObject()) {
-		return false;
-	}
+auto ConfigLoader::BuildArmorVariant(const Json::Value &a_variantJson,
+                                     ArmorVariant &a_variant) -> bool {
+  if (!a_variantJson.isObject()) {
+    return false;
+  }
 
-	a_variant.Linked = a_variantJson["linkTo"].asString();
-	a_variant.DisplayName = a_variantJson["displayName"].asString();
-	a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
+  a_variant.Linked = a_variantJson["linkTo"].asString();
+  a_variant.DisplayName = a_variantJson["displayName"].asString();
+  a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
 
-	LoadFormMap(a_variantJson["replaceByForm"], a_variant.ReplaceByForm);
-	LoadSlotMap(a_variantJson["replaceBySlot"], a_variant.ReplaceBySlot);
-	return true;
+  LoadFormMap(a_variantJson["replaceByForm"], a_variant.ReplaceByForm);
+  LoadSlotMap(a_variantJson["replaceBySlot"], a_variant.ReplaceBySlot);
+  return true;
 }
 
-auto ConfigLoader::NormalizeConditionsPayload(
-	const Json::Value& a_root,
-	Json::Value& a_conditions,
-	Json::Value& a_refs) -> bool
-{
-	if (a_root.isArray()) {
-		a_conditions = a_root;
-		return true;
-	}
+auto ConfigLoader::NormalizeConditionsPayload(const Json::Value &a_root,
+                                              Json::Value &a_conditions,
+                                              Json::Value &a_refs) -> bool {
+  if (a_root.isArray()) {
+    a_conditions = a_root;
+    return true;
+  }
 
-	if (a_root.isObject()) {
-		a_conditions = a_root["conditions"];
-		a_refs = a_root["refs"];
-		if (a_conditions.isArray()) {
-			return true;
-		}
+  if (a_root.isObject()) {
+    a_conditions = a_root["conditions"];
+    a_refs = a_root["refs"];
+    if (a_conditions.isArray()) {
+      return true;
+    }
 
-		logger::error("Condition JSON must contain a conditions array"sv);
-		return false;
-	}
+    logger::error("Condition JSON must contain a conditions array"sv);
+    return false;
+  }
 
-	logger::error("Condition JSON must be an array or object"sv);
-	return false;
+  logger::error("Condition JSON must be an array or object"sv);
+  return false;
 }
 
-auto ConfigLoader::RegisterVariantJson(std::string_view a_name, std::string_view a_variantJson) -> bool
-{
-	Json::Value root;
-	if (!ParseJson(a_variantJson, root) || !root.isObject()) {
-		return false;
-	}
+auto ConfigLoader::RegisterVariantJson(std::string_view a_name,
+                                       std::string_view a_variantJson) -> bool {
+  Json::Value root;
+  if (!ParseJson(a_variantJson, root) || !root.isObject()) {
+    return false;
+  }
 
-	auto variantName = std::string(a_name);
-	if (variantName.empty()) {
-		variantName = root["name"].asString();
-	}
+  auto variantName = std::string(a_name);
+  if (variantName.empty()) {
+    variantName = root["name"].asString();
+  }
 
-	if (variantName.empty()) {
-		logger::error("RegisterVariantJson requires a variant name"sv);
-		return false;
-	}
+  if (variantName.empty()) {
+    logger::error("RegisterVariantJson requires a variant name"sv);
+    return false;
+  }
 
-	ArmorVariant armorVariant{};
-	if (!BuildArmorVariant(root, armorVariant)) {
-		return false;
-	}
+  ArmorVariant armorVariant{};
+  if (!BuildArmorVariant(root, armorVariant)) {
+    return false;
+  }
 
-	DynamicArmorManager::GetSingleton()->ReplaceArmorVariant(variantName, std::move(armorVariant));
-	return true;
+  DynamicArmorManager::GetSingleton()->ReplaceArmorVariant(
+      variantName, std::move(armorVariant));
+  return true;
 }
 
-auto ConfigLoader::DeleteVariant(std::string_view a_name) -> bool
-{
-	if (a_name.empty()) {
-		return false;
-	}
+auto ConfigLoader::DeleteVariant(std::string_view a_name) -> bool {
+  if (a_name.empty()) {
+    return false;
+  }
 
-	return DynamicArmorManager::GetSingleton()->DeleteArmorVariant(a_name);
+  return DynamicArmorManager::GetSingleton()->DeleteArmorVariant(a_name);
 }
 
-auto ConfigLoader::SetVariantConditionsJson(std::string_view a_variant, std::string_view a_conditionsJson) -> bool
-{
-	if (a_variant.empty()) {
-		logger::error("SetVariantConditionsJson requires a variant name"sv);
-		return false;
-	}
+auto ConfigLoader::SetVariantConditionsJson(std::string_view a_variant,
+                                            std::string_view a_conditionsJson)
+    -> bool {
+  if (a_variant.empty()) {
+    logger::error("SetVariantConditionsJson requires a variant name"sv);
+    return false;
+  }
 
-	Json::Value root;
-	if (!ParseJson(a_conditionsJson, root)) {
-		return false;
-	}
+  Json::Value root;
+  if (!ParseJson(a_conditionsJson, root)) {
+    return false;
+  }
 
-	Json::Value conditions;
-	Json::Value refs;
-	if (!NormalizeConditionsPayload(root, conditions, refs)) {
-		return false;
-	}
+  Json::Value conditions;
+  Json::Value refs;
+  if (!NormalizeConditionsPayload(root, conditions, refs)) {
+    return false;
+  }
 
-	DynamicArmorManager::GetSingleton()->ClearCondition(a_variant);
-	LoadConditions(a_variant, conditions, BuildRefMap(refs));
-	return true;
+  DynamicArmorManager::GetSingleton()->ClearCondition(a_variant);
+  LoadConditions(a_variant, conditions, BuildRefMap(refs));
+  return true;
 }
 
-void ConfigLoader::LoadConfigs()
-{
-	const auto dataHandler = RE::TESDataHandler::GetSingleton();
-	if (!dataHandler)
-		return;
+void ConfigLoader::LoadConfigs() {
+  const auto dataHandler = RE::TESDataHandler::GetSingleton();
+  if (!dataHandler)
+    return;
 
-	for (auto& file : dataHandler->files) {
-		if (!file)
-			continue;
+  for (auto &file : dataHandler->files) {
+    if (!file)
+      continue;
 
-		auto fileName = fs::path(file->fileName);
-		fileName.replace_extension("json"sv);
-		auto directory = fs::path("SKSE/Plugins/DynamicArmorVariants");
-		auto dynamicArmorFile = directory / fileName;
+    auto fileName = fs::path(file->fileName);
+    fileName.replace_extension("json"sv);
+    auto directory = fs::path("SKSE/Plugins/DynamicArmorVariants");
+    auto dynamicArmorFile = directory / fileName;
 
-		LoadConfig(dynamicArmorFile);
-	}
+    LoadConfig(dynamicArmorFile);
+  }
 }
 
-void ConfigLoader::LoadConfig(fs::path a_path)
-{
-	RE::BSResourceNiBinaryStream fileStream{ a_path.string() };
+void ConfigLoader::LoadConfig(fs::path a_path) {
+  RE::BSResourceNiBinaryStream fileStream{a_path.string()};
 
-	if (!fileStream.good())
-		return;
+  if (!fileStream.good())
+    return;
 
-	Json::Value root;
-	try {
-		fileStream >> root;
-	}
-	catch (...) {
-		logger::error("Parse errors in file: {}"sv, a_path.filename().string());
-	}
+  Json::Value root;
+  try {
+    fileStream >> root;
+  } catch (...) {
+    logger::error("Parse errors in file: {}"sv, a_path.filename().string());
+  }
 
-	if (!root.isObject())
-		return;
+  if (!root.isObject())
+    return;
 
-	Json::Value variants = root["variants"];
-	if (variants.isArray()) {
-		for (auto& variant : variants) {
-			auto name = variant["name"].asString();
-			LoadVariant(name, variant);
-		}
-	}
+  Json::Value variants = root["variants"];
+  if (variants.isArray()) {
+    for (auto &variant : variants) {
+      auto name = variant["name"].asString();
+      LoadVariant(name, variant);
+    }
+  }
 
-	Json::Value states = root["states"];
-	if (states.isArray()) {
-		for (auto& state : states) {
-			auto variant = state["variant"].asString();
-			LoadConditions(variant, state["conditions"], BuildRefMap(state["refs"]));
-		}
-	}
+  Json::Value states = root["states"];
+  if (states.isArray()) {
+    for (auto &state : states) {
+      auto variant = state["variant"].asString();
+      LoadConditions(variant, state["conditions"], BuildRefMap(state["refs"]));
+    }
+  }
 }
 
-void ConfigLoader::LoadVariant(std::string_view a_name, Json::Value a_variant)
-{
-	ArmorVariant armorVariant{};
-	if (!BuildArmorVariant(a_variant, armorVariant)) {
-		return;
-	}
+void ConfigLoader::LoadVariant(std::string_view a_name, Json::Value a_variant) {
+  ArmorVariant armorVariant{};
+  if (!BuildArmorVariant(a_variant, armorVariant)) {
+    return;
+  }
 
-	DynamicArmorManager::GetSingleton()->RegisterArmorVariant(a_name, std::move(armorVariant));
+  DynamicArmorManager::GetSingleton()->RegisterArmorVariant(
+      a_name, std::move(armorVariant));
 }
 
-void ConfigLoader::LoadConditions(
-	std::string_view a_variant,
-	Json::Value a_conditions,
-	const ConditionParser::RefMap& a_refs)
-{
-	if (!a_conditions.isArray())
-		return;
+void ConfigLoader::LoadConditions(std::string_view a_variant,
+                                  Json::Value a_conditions,
+                                  const ConditionParser::RefMap &a_refs) {
+  if (!a_conditions.isArray())
+    return;
 
-	auto condition = std::make_shared<RE::TESCondition>();
-	RE::TESConditionItem** head = std::addressof(condition->head);
+  auto condition = std::make_shared<RE::TESCondition>();
+  RE::TESConditionItem **head = std::addressof(condition->head);
 
-	for (auto& item : a_conditions) {
-		auto text = item.asString();
+  for (auto &item : a_conditions) {
+    auto text = item.asString();
 
-		if (text.empty())
-			continue;
+    if (text.empty())
+      continue;
 
-		if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
-			*head = conditionItem;
-			head = std::addressof(conditionItem->next);
-		}
-		else {
-			logger::info("Aborting condition parsing"sv);
-			return;
-		}
-	}
+    if (auto conditionItem = ConditionParser::Parse(text, a_refs)) {
+      *head = conditionItem;
+      head = std::addressof(conditionItem->next);
+    } else {
+      logger::info("Aborting condition parsing"sv);
+      return;
+    }
+  }
 
-	DynamicArmorManager::GetSingleton()->SetCondition(a_variant, condition);
+  DynamicArmorManager::GetSingleton()->SetCondition(a_variant, condition);
 }
 
-void ConfigLoader::LoadFormMap(Json::Value a_replaceByForm, ArmorVariant::FormMap& a_formMap)
-{
-	if (!a_replaceByForm.isObject())
-		return;
+void ConfigLoader::LoadFormMap(Json::Value a_replaceByForm,
+                               ArmorVariant::FormMap &a_formMap) {
+  if (!a_replaceByForm.isObject())
+    return;
 
-	for (auto& formIdentifier : a_replaceByForm.getMemberNames()) {
+  for (auto &formIdentifier : a_replaceByForm.getMemberNames()) {
 
-		auto addon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(formIdentifier);
-		if (!addon)
-			continue;
+    auto addon =
+        FormUtil::LookupByIdentifier<RE::TESObjectARMA>(formIdentifier);
+    if (!addon)
+      continue;
 
-		std::vector<RE::TESObjectARMA*> replacementForms;
+    std::vector<RE::TESObjectARMA *> replacementForms;
 
-		Json::Value addons = a_replaceByForm[formIdentifier];
-		if (addons.isString()) {
-			if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-					addons.asString())) {
+    Json::Value addons = a_replaceByForm[formIdentifier];
+    if (addons.isString()) {
+      if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
+              addons.asString())) {
 
-				replacementForms.push_back(variantAddon);
-			}
-			else {
-				logger::warn("Could not resolve form: {}"sv, addons.asString());
-			}
-		}
-		else if (addons.isArray()) {
-			for (auto& identifier : addons) {
-				if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-						identifier.asString())) {
+        replacementForms.push_back(variantAddon);
+      } else {
+        logger::warn("Could not resolve form: {}"sv, addons.asString());
+      }
+    } else if (addons.isArray()) {
+      for (auto &identifier : addons) {
+        if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
+                identifier.asString())) {
 
-					replacementForms.push_back(variantAddon);
-				}
-				else {
-					logger::warn("Could not resolve form: {}"sv, identifier.asString());
-				}
-			}
-		}
+          replacementForms.push_back(variantAddon);
+        } else {
+          logger::warn("Could not resolve form: {}"sv, identifier.asString());
+        }
+      }
+    }
 
-		if (!replacementForms.empty()) {
-			a_formMap.emplace(addon, std::move(replacementForms));
-		}
-		else {
-			logger::warn("Replacements for {} are not valid, ignoring"sv, formIdentifier);
-		}
-	}
+    if (!replacementForms.empty()) {
+      a_formMap.emplace(addon, std::move(replacementForms));
+    } else {
+      logger::warn("Replacements for {} are not valid, ignoring"sv,
+                   formIdentifier);
+    }
+  }
 }
 
-void ConfigLoader::LoadSlotMap(Json::Value a_replaceBySlot, ArmorVariant::SlotMap& a_slotMap)
-{
-	if (!a_replaceBySlot.isObject())
-		return;
+void ConfigLoader::LoadSlotMap(Json::Value a_replaceBySlot,
+                               ArmorVariant::SlotMap &a_slotMap) {
+  if (!a_replaceBySlot.isObject())
+    return;
 
-	for (auto& slotIndex : a_replaceBySlot.getMemberNames()) {
+  for (auto &slotIndex : a_replaceBySlot.getMemberNames()) {
 
-		auto bipedObject = static_cast<BipedObject>(std::stoi(slotIndex) - 30);
+    auto bipedObject = static_cast<BipedObject>(std::stoi(slotIndex) - 30);
 
-		if (bipedObject > 31)
-			continue;
+    if (bipedObject > 31)
+      continue;
 
-		a_slotMap.emplace(bipedObject, std::vector<RE::TESObjectARMA*>());
+    a_slotMap.emplace(bipedObject, std::vector<RE::TESObjectARMA *>());
 
-		Json::Value addons = a_replaceBySlot[slotIndex];
-		if (addons.isString()) {
-			if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-					addons.asString())) {
+    Json::Value addons = a_replaceBySlot[slotIndex];
+    if (addons.isString()) {
+      if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
+              addons.asString())) {
 
-				a_slotMap[bipedObject].push_back(variantAddon);
-			}
-		}
-		else if (addons.isArray()) {
-			for (auto& identifier : addons) {
-				if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-						identifier.asString())) {
+        a_slotMap[bipedObject].push_back(variantAddon);
+      }
+    } else if (addons.isArray()) {
+      for (auto &identifier : addons) {
+        if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
+                identifier.asString())) {
 
-					a_slotMap[bipedObject].push_back(variantAddon);
-				}
-			}
-		}
-	}
+          a_slotMap[bipedObject].push_back(variantAddon);
+        }
+      }
+    }
+  }
 }

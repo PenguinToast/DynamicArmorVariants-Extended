@@ -3,3 +3,4 @@ buildVR/
 package/
 *.7z
 .xmake/
+compile_commands.json
