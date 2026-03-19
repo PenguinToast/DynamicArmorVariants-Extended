@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-MODE="release"
+MODE="releasedbg"
 CLEAN=0
 PLUGIN_NAME="DynamicArmorVariants"
 DEFAULT_MOD_DIR="/mnt/f/games/skyrim/modlists/pt_test/mods/dynamic_armor_variants_ng"
