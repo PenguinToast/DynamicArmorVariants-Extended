@@ -39,6 +39,7 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface* a_skse)
 
 void DynamicArmorManager::Deserialize(SKSE::SerializationInterface* a_skse)
 {
+	ClearArmorAddonResolutionCache();
 	std::uint32_t type;
 	std::uint32_t version;
 	std::uint32_t length;
@@ -105,5 +106,6 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface* a_skse)
 
 void DynamicArmorManager::Revert()
 {
+	ClearArmorAddonResolutionCache();
 	_variantOverrides.clear();
 }

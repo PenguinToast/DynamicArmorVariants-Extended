@@ -9,6 +9,7 @@ auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager*
 
 void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name, ArmorVariant&& a_variant)
 {
+	ClearArmorAddonResolutionCache();
 	auto [it, inserted] = _variants.try_emplace(std::string(a_name), std::move(a_variant));
 
 	if (inserted)
@@ -40,11 +41,13 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name, ArmorVar
 
 void DynamicArmorManager::ReplaceArmorVariant(std::string_view a_name, ArmorVariant&& a_variant)
 {
+	ClearArmorAddonResolutionCache();
 	_variants.insert_or_assign(std::string(a_name), std::move(a_variant));
 }
 
 auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool
 {
+	ClearArmorAddonResolutionCache();
 	const auto erased = _variants.erase(std::string(a_name)) > 0;
 	_conditions.erase(std::string(a_name));
 
@@ -59,11 +62,13 @@ void DynamicArmorManager::SetCondition(
 	std::string_view a_state,
 	std::shared_ptr<RE::TESCondition> a_condition)
 {
+	ClearArmorAddonResolutionCache();
 	_conditions.insert_or_assign(std::string(a_state), a_condition);
 }
 
 void DynamicArmorManager::ClearCondition(std::string_view a_state)
 {
+	ClearArmorAddonResolutionCache();
 	_conditions.erase(std::string(a_state));
 }
 
@@ -75,38 +80,19 @@ void DynamicArmorManager::VisitArmorAddons(
 	// Observed from player-side runtime logs during equip/variant changes:
 	// VisitArmorAddons runs before GetBipedObjectSlots, and Skyrim often performs
 	// another VisitArmorAddons pass immediately after the slot-mask evaluation.
-	std::unordered_map<std::string, const ArmorVariant::AddonList*> addonLists;
-	std::string variantState;
-
 	if (Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
 		a_visit(a_armorAddon);
 		return;
 	}
 
-	for (auto& [name, variant] : _variants) {
-
-		auto addonList = variant.GetAddonList(a_armorAddon);
-		if (!addonList)
-			continue;
-
-		if (!variant.Linked.empty()) {
-			addonLists.insert_or_assign(variant.Linked, addonList);
-		}
-
-		if (IsUsingVariant(a_actor, name)) {
-			variantState = name;
-			addonLists.try_emplace(name, addonList);
-		}
-	}
-
-	if (!variantState.empty()) {
-		auto& variantAddons = addonLists[variantState];
-		for (auto& armorAddon : *variantAddons) {
-			a_visit(armorAddon);
-		}
-	}
-	else {
+	const auto& resolution = GetOrBuildArmorAddonResolution(a_actor, a_armorAddon);
+	if (!resolution.ResolvedAddonList) {
 		a_visit(a_armorAddon);
+		return;
+	}
+
+	for (auto* armorAddon : *resolution.ResolvedAddonList) {
+		a_visit(armorAddon);
 	}
 }
 
@@ -129,21 +115,19 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor* a_actor, RE::TESObjectA
 	auto overrideOption = ArmorVariant::OverrideOption::None;
 
 	for (auto& armorAddon : a_armor->armorAddons) {
-		for (auto& [name, variant] : _variants) {
+		if (!armorAddon) {
+			continue;
+		}
 
-			if (!variant.HasSlotOverrides())
-				continue;
+		const auto& resolution = GetOrBuildArmorAddonResolution(a_actor, armorAddon);
+		if (resolution.ActiveVariantState.empty()) {
+			continue;
+		}
 
-			if (!variant.WouldReplace(armorAddon))
-				continue;
-
-			if (IsUsingVariant(a_actor, name)) {
-				if (util::to_underlying(variant.OverrideHead) >
-				    util::to_underlying(overrideOption)) {
-
-					overrideOption = variant.OverrideHead;
-				}
-			}
+		if (const auto it = _variants.find(resolution.ActiveVariantState); it != _variants.end() &&
+		    util::to_underlying(it->second.OverrideHead) >
+			    util::to_underlying(overrideOption)) {
+			overrideOption = it->second.OverrideHead;
 		}
 	}
 
@@ -184,6 +168,73 @@ auto DynamicArmorManager::IsUsingVariant(RE::Actor* a_actor, std::string a_state
 	else {
 		return false;
 	}
+}
+
+auto DynamicArmorManager::GetOrBuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const
+	-> const ArmorAddonResolutionCache::Value&
+{
+	const ArmorAddonResolutionCache::Key key{
+		.ActorFormID = a_actor ? a_actor->GetFormID() : 0,
+		.ArmorAddonFormID = a_armorAddon ? a_armorAddon->GetFormID() : 0
+	};
+
+	if (const auto* resolution = _armorAddonResolutionCache_.Find(key)) {
+		return *resolution;
+	}
+
+	_armorAddonResolutionCache_.Insert(key, BuildArmorAddonResolution(a_actor, a_armorAddon));
+	return *_armorAddonResolutionCache_.Find(key);
+}
+
+auto DynamicArmorManager::BuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const
+	-> ArmorAddonResolutionCache::Value
+{
+	ArmorAddonResolutionCache::Value resolution{};
+	if (!a_actor || !a_armorAddon) {
+		return resolution;
+	}
+
+	const ArmorVariant::AddonList* stateAddonList = nullptr;
+	const ArmorVariant::AddonList* linkedAddonList = nullptr;
+
+	for (auto& [name, variant] : _variants) {
+		if (!variant.WouldReplace(a_armorAddon)) {
+			continue;
+		}
+
+		if (!IsUsingVariant(a_actor, name)) {
+			continue;
+		}
+
+		resolution.ActiveVariantState = name;
+	}
+
+	if (resolution.ActiveVariantState.empty()) {
+		return resolution;
+	}
+
+	for (auto& [name, variant] : _variants) {
+		auto addonList = variant.GetAddonList(a_armorAddon);
+		if (!addonList) {
+			continue;
+		}
+
+		if (name == resolution.ActiveVariantState && !stateAddonList) {
+			stateAddonList = addonList;
+		}
+
+		if (variant.Linked == resolution.ActiveVariantState) {
+			linkedAddonList = addonList;
+		}
+	}
+
+	resolution.ResolvedAddonList = linkedAddonList ? linkedAddonList : stateAddonList;
+	return resolution;
+}
+
+void DynamicArmorManager::ClearArmorAddonResolutionCache() const
+{
+	_armorAddonResolutionCache_.Clear();
 }
 
 auto DynamicArmorManager::GetVariants(RE::TESObjectARMO* a_armor) const -> std::vector<std::string>
@@ -257,6 +308,7 @@ auto DynamicArmorManager::GetDisplayName(const std::string& a_variant) const -> 
 
 void DynamicArmorManager::ApplyVariant(RE::Actor* a_actor, const std::string& a_variant)
 {
+	ClearArmorAddonResolutionCache();
 	// Find variant definition
 	auto it = _variants.find(a_variant);
 	if (it == _variants.end())
@@ -317,6 +369,7 @@ void DynamicArmorManager::ApplyVariant(
 	const RE::TESObjectARMO* a_armor,
 	const std::string& a_variant)
 {
+	ClearArmorAddonResolutionCache();
 	// Find variant definition
 	auto it = _variants.find(a_variant);
 	if (it == _variants.end())
@@ -355,6 +408,7 @@ void DynamicArmorManager::ApplyVariant(
 
 void DynamicArmorManager::ResetVariant(RE::Actor* a_actor, const RE::TESObjectARMO* a_armor)
 {
+	ClearArmorAddonResolutionCache();
 	auto it = _variantOverrides.find(a_actor->GetFormID());
 	if (it == _variantOverrides.end())
 		return;
@@ -374,11 +428,13 @@ void DynamicArmorManager::ResetVariant(RE::Actor* a_actor, const RE::TESObjectAR
 
 void DynamicArmorManager::ResetAllVariants(RE::Actor* a_actor)
 {
+	ClearArmorAddonResolutionCache();
 	_variantOverrides.erase(a_actor->GetFormID());
 	Ext::Actor::Update3DSafe(a_actor);
 }
 
 void DynamicArmorManager::ResetAllVariants(RE::FormID a_formID)
 {
+	ClearArmorAddonResolutionCache();
 	_variantOverrides.erase(a_formID);
 }

@@ -1,6 +1,9 @@
 #pragma once
 
+#include "ArmorAddonResolutionCache.h"
 #include "ArmorVariant.h"
+
+#include <unordered_set>
 
 class DynamicArmorManager
 {
@@ -55,13 +58,18 @@ public:
 private:
 	static constexpr std::uint32_t SerializationVersion = 1;
 	static constexpr std::uint32_t SerializationType = 'AAVO';
+	static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
 
 	DynamicArmorManager() = default;
 
 	auto IsUsingVariant(RE::Actor* a_actor, std::string a_state) const -> bool;
+	auto GetOrBuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const -> const ArmorAddonResolutionCache::Value&;
+	auto BuildArmorAddonResolution(RE::Actor* a_actor, RE::TESObjectARMA* a_armorAddon) const -> ArmorAddonResolutionCache::Value;
+	void ClearArmorAddonResolutionCache() const;
 
 	tsl::ordered_map<std::string, ArmorVariant> _variants;
 
 	std::unordered_map<std::string, std::shared_ptr<RE::TESCondition>> _conditions;
 	std::unordered_map<RE::FormID, std::unordered_set<std::string>> _variantOverrides;
+	mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{ ArmorAddonResolutionCacheCapacity };
 };
