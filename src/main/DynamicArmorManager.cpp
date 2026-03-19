@@ -72,6 +72,9 @@ void DynamicArmorManager::VisitArmorAddons(
 	RE::TESObjectARMA* a_armorAddon,
 	std::function<void(RE::TESObjectARMA*)> a_visit) const
 {
+	// Observed from player-side runtime logs during equip/variant changes:
+	// VisitArmorAddons runs before GetBipedObjectSlots, and Skyrim often performs
+	// another VisitArmorAddons pass immediately after the slot-mask evaluation.
 	std::unordered_map<std::string, const ArmorVariant::AddonList*> addonLists;
 	std::string variantState;
 
