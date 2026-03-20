@@ -28,20 +28,20 @@
             "enum": ["none", "showAll", "showHead", "hideHair", "hideAll"]
           },
           "replaceByForm": {
-            "description": "Assigns replacements for specific Armor Addon forms",
+            "description": "Assigns replacements for specific Armor Addon forms. Replacement values may be either \"Plugin.esp|AddonID\" or \"Plugin.esp|ArmorID|Plugin.esp|AddonID\".",
             "type": "object",
             "patternProperties": {
               "^[\\w\\-. ]+\\.es[lmp]\\|(0[Xx])?\\x{1,8}$": {
-                "$ref": "#/defs/formOrFormList"
+                "$ref": "#/defs/replacementOrReplacementList"
               }
             }
           },
           "replaceBySlot": {
-            "description": "Assigns replacements for any Armor Addons that use specified slots",
+            "description": "Assigns replacements for any Armor Addons that use specified slots. Replacement values may be either \"Plugin.esp|AddonID\" or \"Plugin.esp|ArmorID|Plugin.esp|AddonID\".",
             "type": "object",
             "patternProperties": {
               "[3-5][0-9]|6[0-1]": {
-                "$ref": "#/defs/formOrFormList"
+                "$ref": "#/defs/replacementOrReplacementList"
               }
             }
           }
@@ -83,16 +83,21 @@
       "type": "string",
       "pattern": "^[\\w\\-. ]+\\.es[lmp]\\|(0[Xx])?\\x{1,8}$"
     },
-    "formOrFormList": {
+    "replacement": {
+      "description": "A replacement Armor Addon identifier. Use either \"Plugin.esp|AddonID\" for an addon-only replacement, or \"Plugin.esp|ArmorID|Plugin.esp|AddonID\" to also supply the owning Armor form.",
+      "type": "string",
+      "pattern": "^[\\w\\-. ]+\\.es[lmp]\\|(0[Xx])?\\x{1,8}(\\|[\\w\\-. ]+\\.es[lmp]\\|(0[Xx])?\\x{1,8})?$"
+    },
+    "replacementOrReplacementList": {
       "anyOf": [
         {
-          "$ref": "#/defs/form"
+          "$ref": "#/defs/replacement"
         },
         {
-          "description": "An array of Forms",
+          "description": "An array of replacement Armor Addon identifiers",
           "type": "array",
           "items": {
-            "$ref": "#/defs/form"
+            "$ref": "#/defs/replacement"
           }
         }
       ]

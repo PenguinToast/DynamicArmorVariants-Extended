@@ -1,5 +1,28 @@
 Framework for mods to define variants of armors by swapping armor addons dynamically at runtime.
 
+## Config Format
+Variant replacement maps support two replacement identifier forms:
+
+- `Plugin.esp|AddonLocalID`
+  - Replaces with that `ARMA` and keeps the source armor as the default owner.
+- `Plugin.esp|ArmorLocalID|Plugin.esp|AddonLocalID`
+  - Replaces with that `ARMA` and explicitly supplies the owning `ARMO` to use while visiting the addon.
+
+This applies to values in both `replaceByForm` and `replaceBySlot`, and to arrays of those values.
+
+Example:
+
+```json
+{
+  "replaceByForm": {
+    "Skyrim.esm|0010D6A1": [
+      "Dragonborn.esm|0001C655|Skyrim.esm|00027DE4",
+      "Skyrim.esm|00027DE5"
+    ]
+  }
+}
+```
+
 ## Requirements
 - [xmake](https://xmake.io/)
 - Visual Studio 2022 with Desktop development with C++
