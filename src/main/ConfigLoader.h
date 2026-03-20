@@ -9,9 +9,11 @@ public:
   ConfigLoader() = delete;
 
   static void LoadConfigs();
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   static auto RegisterVariantJson(std::string_view a_name,
                                   std::string_view a_variantJson) -> bool;
   static auto DeleteVariant(std::string_view a_name) -> bool;
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   static auto SetVariantConditionsJson(std::string_view a_variant,
                                        std::string_view a_conditionsJson)
       -> bool;
