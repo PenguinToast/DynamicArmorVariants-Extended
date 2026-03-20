@@ -18,14 +18,14 @@ auto ArmorAddonResolutionCache::Find(const Key &a_key) -> const Value * {
 
 void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value) {
   if (const auto it = _entries.find(a_key); it != _entries.end()) {
-    it->second.Value = std::move(a_value);
+    it->second.Value = a_value;
     Touch(a_key, it);
     return;
   }
 
   _lru.push_front(a_key);
   _entries.emplace(a_key,
-                   Entry{.Value = std::move(a_value),
+                   Entry{.Value = a_value,
                          .ExpiresAt = std::chrono::steady_clock::now() + _ttl,
                          .LruIt = _lru.begin()});
 

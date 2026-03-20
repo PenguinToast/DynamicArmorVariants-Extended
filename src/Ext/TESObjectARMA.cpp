@@ -2,8 +2,8 @@
 #include "RE/Offset.Ext.h"
 
 namespace Ext {
-bool TESObjectARMA::HasRace(RE::TESObjectARMA *a_armorAddon,
-                            RE::TESRace *a_race) {
+auto TESObjectARMA::HasRace(RE::TESObjectARMA *a_armorAddon,
+                            RE::TESRace *a_race) -> bool {
   using func_t = decltype(HasRace);
   static REL::Relocation<func_t> func{RE::Offset::TESObjectARMA::HasRace};
   return func(a_armorAddon, a_race);

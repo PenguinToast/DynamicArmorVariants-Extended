@@ -178,7 +178,7 @@ void ConfigLoader::LoadConfigs() {
   }
 }
 
-void ConfigLoader::LoadConfig(fs::path a_path) {
+void ConfigLoader::LoadConfig(const fs::path &a_path) {
   RE::BSResourceNiBinaryStream fileStream{a_path.string()};
 
   if (!fileStream.good())
@@ -211,7 +211,8 @@ void ConfigLoader::LoadConfig(fs::path a_path) {
   }
 }
 
-void ConfigLoader::LoadVariant(std::string_view a_name, Json::Value a_variant) {
+void ConfigLoader::LoadVariant(std::string_view a_name,
+                               const Json::Value &a_variant) {
   ArmorVariant armorVariant{};
   if (!BuildArmorVariant(a_variant, armorVariant)) {
     return;
@@ -222,7 +223,7 @@ void ConfigLoader::LoadVariant(std::string_view a_name, Json::Value a_variant) {
 }
 
 void ConfigLoader::LoadConditions(std::string_view a_variant,
-                                  Json::Value a_conditions,
+                                  const Json::Value &a_conditions,
                                   const ConditionParser::RefMap &a_refs) {
   if (!a_conditions.isArray())
     return;

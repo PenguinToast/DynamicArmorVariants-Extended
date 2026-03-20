@@ -21,11 +21,12 @@ public:
   void ReplaceArmorVariant(std::string_view a_name, ArmorVariant &&a_variant);
   auto DeleteArmorVariant(std::string_view a_name) -> bool;
   void SetCondition(std::string_view a_state,
-                    std::shared_ptr<RE::TESCondition> a_condition);
+                    const std::shared_ptr<RE::TESCondition> &a_condition);
   void ClearCondition(std::string_view a_state);
 
-  void VisitArmorAddons(RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon,
-                        std::function<void(RE::TESObjectARMA *)> a_visit) const;
+  void VisitArmorAddons(
+      RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon,
+      const std::function<void(RE::TESObjectARMA *)> &a_visit) const;
 
   auto GetBipedObjectSlots(RE::Actor *a_actor, RE::TESObjectARMO *a_armor) const
       -> BipedObjectSlot;

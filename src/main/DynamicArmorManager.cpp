@@ -63,7 +63,8 @@ auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool {
 }
 
 void DynamicArmorManager::SetCondition(
-    std::string_view a_state, std::shared_ptr<RE::TESCondition> a_condition) {
+    std::string_view a_state,
+    const std::shared_ptr<RE::TESCondition> &a_condition) {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
   _conditions.insert_or_assign(std::string(a_state), a_condition);
@@ -77,7 +78,7 @@ void DynamicArmorManager::ClearCondition(std::string_view a_state) {
 
 void DynamicArmorManager::VisitArmorAddons(
     RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon,
-    std::function<void(RE::TESObjectARMA *)> a_visit) const {
+    const std::function<void(RE::TESObjectARMA *)> &a_visit) const {
   // Observed from player-side runtime logs during equip/variant changes:
   // VisitArmorAddons runs before GetBipedObjectSlots, and Skyrim often performs
   // another VisitArmorAddons pass immediately after the slot-mask evaluation.

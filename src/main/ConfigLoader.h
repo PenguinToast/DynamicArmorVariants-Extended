@@ -27,12 +27,13 @@ private:
   static auto NormalizeConditionsPayload(const Json::Value &a_root,
                                          Json::Value &a_conditions,
                                          Json::Value &a_refs) -> bool;
-  static void LoadConfig(fs::path a_path);
+  static void LoadConfig(const fs::path &a_path);
 
-  static void LoadVariant(std::string_view a_name, Json::Value a_variant);
+  static void LoadVariant(std::string_view a_name,
+                          const Json::Value &a_variant);
 
   static void LoadConditions(std::string_view a_variant,
-                             Json::Value a_conditions,
+                             const Json::Value &a_conditions,
                              const ConditionParser::RefMap &a_refs);
 
   static void LoadFormMap(Json::Value a_replaceByForm,

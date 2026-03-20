@@ -18,8 +18,10 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
   for (auto &armorAddon : a_armor->armorAddons) {
     if (Ext::TESObjectARMA::HasRace(armorAddon, race)) {
 
-      auto visitor = std::bind(Ext::TESObjectARMA::InitWornArmorAddon,
-                               std::placeholders::_1, a_armor, a_biped, sex);
+      auto visitor = [a_armor, a_biped, sex](auto &&PH1) {
+        return Ext::TESObjectARMA::InitWornArmorAddon(
+            std::forward<decltype(PH1)>(PH1), a_armor, a_biped, sex);
+      };
 
       DynamicArmorManager::GetSingleton()->VisitArmorAddons(a_actor, armorAddon,
                                                             visitor);
