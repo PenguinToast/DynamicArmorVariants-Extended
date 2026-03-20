@@ -4,6 +4,7 @@
 
 #include <chrono>
 #include <list>
+#include <optional>
 #include <unordered_map>
 
 class ArmorAddonResolutionCache {
@@ -17,7 +18,7 @@ public:
 
   struct Value {
     const ArmorVariant *ActiveVariant{nullptr};
-    const ArmorVariant::AddonList *ResolvedAddonList{nullptr};
+    std::optional<ArmorVariant::AddonList> ResolvedAddonList;
   };
 
   explicit ArmorAddonResolutionCache(std::size_t a_capacity)

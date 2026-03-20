@@ -1,7 +1,31 @@
 #include "DynamicArmorManager.h"
 #include "Ext/Actor.h"
+#include "Ext/TESObjectARMA.h"
 
 #include <mutex>
+
+namespace {
+auto FilterAddonListForRace(const ArmorVariant::AddonList *a_addonList,
+                            RE::TESRace *a_race)
+    -> std::optional<ArmorVariant::AddonList> {
+  if (!a_addonList) {
+    return std::nullopt;
+  }
+
+  ArmorVariant::AddonList filtered;
+  filtered.reserve(a_addonList->size());
+  for (const auto &entry : *a_addonList) {
+    if (!entry.ArmorAddon || !a_race ||
+        !Ext::TESObjectARMA::HasRace(entry.ArmorAddon, a_race)) {
+      continue;
+    }
+
+    filtered.push_back(entry);
+  }
+
+  return filtered;
+}
+} // namespace
 
 auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager * {
   static DynamicArmorManager singleton{};
@@ -92,7 +116,7 @@ void DynamicArmorManager::VisitArmorAddons(
 
   const auto &resolution =
       GetOrBuildArmorAddonResolution(a_actor, a_armorAddon);
-  if (!resolution.ResolvedAddonList) {
+  if (!resolution.ResolvedAddonList.has_value()) {
     a_visit(a_defaultArmor, a_armorAddon);
     return;
   }
@@ -146,7 +170,7 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
       overrideOption = resolution.ActiveVariant->OverrideHead;
     }
 
-    if (!resolution.ResolvedAddonList) {
+    if (!resolution.ResolvedAddonList.has_value()) {
       continue;
     }
 
@@ -271,8 +295,8 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
     return resolution;
   }
 
-  resolution.ResolvedAddonList =
-      linkedAddonList ? linkedAddonList : stateAddonList;
+  resolution.ResolvedAddonList = FilterAddonListForRace(
+      linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
   return resolution;
 }
 
