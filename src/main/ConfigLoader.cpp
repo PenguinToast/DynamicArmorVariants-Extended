@@ -284,7 +284,7 @@ void ConfigLoader::LoadFormMap(Json::Value a_replaceByForm,
       }
     }
 
-    if (!replacementForms.empty()) {
+    if (addons.isArray() || !replacementForms.empty()) {
       a_formMap.emplace(addon, std::move(replacementForms));
     } else {
       logger::warn("Replacements for {} are not valid, ignoring"sv,
@@ -322,6 +322,8 @@ void ConfigLoader::LoadSlotMap(Json::Value a_replaceBySlot,
           a_slotMap[bipedObject].push_back(variantAddon);
         }
       }
+    } else {
+      a_slotMap.erase(bipedObject);
     }
   }
 }
