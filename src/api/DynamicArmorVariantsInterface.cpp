@@ -2,6 +2,7 @@
 
 #include "ConfigLoader.h"
 #include "Ext/Actor.h"
+#include "main/DynamicArmorManager.h"
 
 namespace {
 std::atomic<bool> g_apiReady{false};
@@ -42,6 +43,28 @@ bool DynamicArmorVariantsInterface::RefreshActor(RE::Actor *a_actor) {
   }
 
   Ext::Actor::Update3DSafe(a_actor);
+  return true;
+}
+
+bool DynamicArmorVariantsInterface::ApplyVariantOverride(
+    RE::Actor *a_actor, const char *a_variant) {
+  if (!IsReady() || !a_actor || !a_variant) {
+    return false;
+  }
+
+  DynamicArmorManager::GetSingleton()->ApplyVariant(a_actor,
+                                                    std::string(a_variant));
+  return true;
+}
+
+bool DynamicArmorVariantsInterface::RemoveVariantOverride(
+    RE::Actor *a_actor, const char *a_variant) {
+  if (!IsReady() || !a_actor || !a_variant) {
+    return false;
+  }
+
+  DynamicArmorManager::GetSingleton()->RemoveVariantOverride(
+      a_actor, std::string(a_variant));
   return true;
 }
 

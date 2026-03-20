@@ -46,6 +46,8 @@ public:
   void ApplyVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor,
                     const std::string &a_variant);
 
+  void RemoveVariantOverride(RE::Actor *a_actor, const std::string &a_variant);
+
   void ResetVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor);
 
   void ResetAllVariants(RE::Actor *a_actor);

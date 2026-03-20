@@ -528,6 +528,26 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
   Ext::Actor::Update3DSafe(a_actor);
 }
 
+void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
+                                                const std::string &a_variant) {
+  std::unique_lock lock(_stateMutex);
+  ClearArmorAddonResolutionCache();
+  auto it = _variantOverrides.find(a_actor->GetFormID());
+  if (it == _variantOverrides.end()) {
+    return;
+  }
+
+  if (it->second.erase(a_variant) == 0) {
+    return;
+  }
+
+  if (it->second.empty()) {
+    _variantOverrides.erase(it);
+  }
+
+  Ext::Actor::Update3DSafe(a_actor);
+}
+
 void DynamicArmorManager::ResetAllVariants(RE::Actor *a_actor) {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
