@@ -67,6 +67,10 @@ private:
 
   DynamicArmorManager() = default;
 
+  auto IsVariantOverrideLocked(RE::Actor *a_actor,
+                               std::string_view a_state) const -> bool;
+  auto IsVariantConditionLocked(RE::Actor *a_actor,
+                                std::string_view a_state) const -> bool;
   auto IsUsingVariantLocked(RE::Actor *a_actor, std::string_view a_state) const
       -> bool;
   auto GetOrBuildArmorAddonResolution(RE::Actor *a_actor,

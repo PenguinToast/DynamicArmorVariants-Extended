@@ -215,22 +215,39 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
 auto DynamicArmorManager::IsUsingVariantLocked(RE::Actor *a_actor,
                                                std::string_view a_state) const
     -> bool {
+  return IsVariantOverrideLocked(a_actor, a_state) ||
+         IsVariantConditionLocked(a_actor, a_state);
+}
+
+auto DynamicArmorManager::IsVariantOverrideLocked(
+    RE::Actor *a_actor, std::string_view a_state) const -> bool {
+  if (!a_actor) {
+    return false;
+  }
+
   const auto state = std::string(a_state);
 
   if (auto it = _variantOverrides.find(a_actor->GetFormID());
       it != _variantOverrides.end()) {
-
-    if (it->second.contains(state)) {
-      return true;
-    }
+    return it->second.contains(state);
   }
 
+  return false;
+}
+
+auto DynamicArmorManager::IsVariantConditionLocked(
+    RE::Actor *a_actor, std::string_view a_state) const -> bool {
+  if (!a_actor) {
+    return false;
+  }
+
+  const auto state = std::string(a_state);
   if (auto it = _conditions.find(state); it != _conditions.end()) {
     auto &condition = it->second;
     return condition ? condition->IsTrue(a_actor, a_actor) : false;
-  } else {
-    return false;
   }
+
+  return false;
 }
 
 auto DynamicArmorManager::GetOrBuildArmorAddonResolution(
@@ -259,44 +276,60 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
 
   std::unordered_map<std::string_view, const ArmorVariant::AddonList *>
       linkedAddonLists;
-  const ArmorVariant::AddonList *stateAddonList = nullptr;
-  const ArmorVariant::AddonList *linkedAddonList = nullptr;
-  std::string activeVariantState;
+  const auto resolvePass = [&](auto &&isActive) {
+    const ArmorVariant::AddonList *stateAddonList = nullptr;
+    const ArmorVariant::AddonList *linkedAddonList = nullptr;
+    std::string activeVariantState;
+    const ArmorVariant *activeVariant = nullptr;
 
-  for (auto &[name, variant] : _variants) {
-    const auto *addonList = variant.GetAddonList(a_armorAddon);
-    if (!addonList) {
-      continue;
-    }
+    linkedAddonLists.clear();
 
-    if (!variant.Linked.empty()) {
-      linkedAddonLists.insert_or_assign(variant.Linked, addonList);
-      if (variant.Linked == activeVariantState) {
-        linkedAddonList = addonList;
+    for (auto &[name, variant] : _variants) {
+      const auto *addonList = variant.GetAddonList(a_armorAddon);
+      if (!addonList) {
+        continue;
+      }
+
+      if (!variant.Linked.empty()) {
+        linkedAddonLists.insert_or_assign(variant.Linked, addonList);
+        if (variant.Linked == activeVariantState) {
+          linkedAddonList = addonList;
+        }
+      }
+
+      if (!isActive(name)) {
+        continue;
+      }
+
+      activeVariantState = name;
+      activeVariant = std::addressof(variant);
+      stateAddonList = addonList;
+      if (const auto it = linkedAddonLists.find(activeVariantState);
+          it != linkedAddonLists.end()) {
+        linkedAddonList = it->second;
+      } else {
+        linkedAddonList = nullptr;
       }
     }
 
-    if (!IsUsingVariantLocked(a_actor, name)) {
-      continue;
+    if (!activeVariant) {
+      return false;
     }
 
-    activeVariantState = name;
-    resolution.ActiveVariant = std::addressof(variant);
-    stateAddonList = addonList;
-    if (const auto it = linkedAddonLists.find(activeVariantState);
-        it != linkedAddonLists.end()) {
-      linkedAddonList = it->second;
-    } else {
-      linkedAddonList = nullptr;
-    }
+    resolution.ActiveVariant = activeVariant;
+    resolution.ResolvedAddonList = FilterAddonListForRace(
+        linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
+    return true;
+  };
+
+  if (!resolvePass([&](std::string_view a_state) {
+        return IsVariantOverrideLocked(a_actor, a_state);
+      })) {
+    resolvePass([&](std::string_view a_state) {
+      return IsVariantConditionLocked(a_actor, a_state);
+    });
   }
 
-  if (!resolution.ActiveVariant) {
-    return resolution;
-  }
-
-  resolution.ResolvedAddonList = FilterAddonListForRace(
-      linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
   return resolution;
 }
 
