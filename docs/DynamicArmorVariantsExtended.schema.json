@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://raw.githubusercontent.com/Exit-9B/DynamicArmorVariants/main/docs/DynamicArmorVariants.schema.json",
-  "title": "Dynamic Armor Variants",
-  "description": "Provides definitions for Dynamic Armor Variants",
+  "$id": "https://raw.githubusercontent.com/PenguinToast/DynamicArmorVariants-Extended/main/docs/DynamicArmorVariantsExtended.schema.json",
+  "title": "Dynamic Armor Variants Extended",
+  "description": "Provides definitions for Dynamic Armor Variants Extended",
   "type": "object",
   "properties": {
     "variants": {

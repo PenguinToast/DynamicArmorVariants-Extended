@@ -1,12 +1,13 @@
 #pragma once
 
-#include "DynamicArmorVariantsAPI.h"
+#include "DynamicArmorVariantsExtendedAPI.h"
 
-class DynamicArmorVariantsInterface
-    : public DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001 {
+class DynamicArmorVariantsExtendedInterface
+    : public DynamicArmorVariantsExtendedAPI::
+          IDynamicArmorVariantsExtendedInterface001 {
 public:
-  static auto GetSingleton() -> DynamicArmorVariantsInterface * {
-    static DynamicArmorVariantsInterface singleton;
+  static auto GetSingleton() -> DynamicArmorVariantsExtendedInterface * {
+    static DynamicArmorVariantsExtendedInterface singleton;
     return std::addressof(singleton);
   }
 

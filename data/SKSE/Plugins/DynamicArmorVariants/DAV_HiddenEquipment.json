@@ -1,5 +1,5 @@
 {
-  "$schema": "https://raw.githubusercontent.com/Exit-9B/DynamicArmorVariants/main/docs/DynamicArmorVariants.schema.json",
+  "$schema": "https://raw.githubusercontent.com/PenguinToast/DynamicArmorVariants-Extended/main/docs/DynamicArmorVariantsExtended.schema.json",
   "variants": [
     {
       "name": "DAV_HiddenCirclet",

@@ -1,4 +1,4 @@
-#include "DynamicArmorVariantsInterface.h"
+#include "DynamicArmorVariantsExtendedInterface.h"
 
 #include "ConfigLoader.h"
 #include "Ext/Actor.h"
@@ -8,9 +8,11 @@ namespace {
 std::atomic<bool> g_apiReady{false};
 }
 
-bool DynamicArmorVariantsInterface::IsReady() { return g_apiReady.load(); }
+bool DynamicArmorVariantsExtendedInterface::IsReady() {
+  return g_apiReady.load();
+}
 
-bool DynamicArmorVariantsInterface::RegisterVariantJson(
+bool DynamicArmorVariantsExtendedInterface::RegisterVariantJson(
     const char *a_name, const char *a_variantJson) {
   if (!IsReady() || !a_variantJson) {
     return false;
@@ -20,7 +22,7 @@ bool DynamicArmorVariantsInterface::RegisterVariantJson(
                                            a_variantJson);
 }
 
-bool DynamicArmorVariantsInterface::DeleteVariant(const char *a_name) {
+bool DynamicArmorVariantsExtendedInterface::DeleteVariant(const char *a_name) {
   if (!IsReady() || !a_name) {
     return false;
   }
@@ -28,7 +30,7 @@ bool DynamicArmorVariantsInterface::DeleteVariant(const char *a_name) {
   return ConfigLoader::DeleteVariant(a_name);
 }
 
-bool DynamicArmorVariantsInterface::SetVariantConditionsJson(
+bool DynamicArmorVariantsExtendedInterface::SetVariantConditionsJson(
     const char *a_name, const char *a_conditionsJson) {
   if (!IsReady() || !a_name || !a_conditionsJson) {
     return false;
@@ -37,7 +39,7 @@ bool DynamicArmorVariantsInterface::SetVariantConditionsJson(
   return ConfigLoader::SetVariantConditionsJson(a_name, a_conditionsJson);
 }
 
-bool DynamicArmorVariantsInterface::RefreshActor(RE::Actor *a_actor) {
+bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
   if (!IsReady() || !a_actor) {
     return false;
   }
@@ -46,7 +48,7 @@ bool DynamicArmorVariantsInterface::RefreshActor(RE::Actor *a_actor) {
   return true;
 }
 
-bool DynamicArmorVariantsInterface::ApplyVariantOverride(
+bool DynamicArmorVariantsExtendedInterface::ApplyVariantOverride(
     RE::Actor *a_actor, const char *a_variant) {
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
@@ -57,7 +59,7 @@ bool DynamicArmorVariantsInterface::ApplyVariantOverride(
   return true;
 }
 
-bool DynamicArmorVariantsInterface::RemoveVariantOverride(
+bool DynamicArmorVariantsExtendedInterface::RemoveVariantOverride(
     RE::Actor *a_actor, const char *a_variant) {
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
@@ -68,33 +70,34 @@ bool DynamicArmorVariantsInterface::RemoveVariantOverride(
   return true;
 }
 
-void DynamicArmorVariantsInterface::SetReady(bool a_ready) {
+void DynamicArmorVariantsExtendedInterface::SetReady(bool a_ready) {
   g_apiReady.store(a_ready);
 }
 
-void *
-DynamicArmorVariantsInterface::GetApiFunction(unsigned int a_revisionNumber) {
+void *DynamicArmorVariantsExtendedInterface::GetApiFunction(
+    unsigned int a_revisionNumber) {
   switch (a_revisionNumber) {
   case 1:
-    return static_cast<
-        DynamicArmorVariantsAPI::IDynamicArmorVariantsInterface001 *>(
+    return static_cast<DynamicArmorVariantsExtendedAPI::
+                           IDynamicArmorVariantsExtendedInterface001 *>(
         GetSingleton());
   default:
     return nullptr;
   }
 }
 
-void DynamicArmorVariantsInterface::HandleInterfaceRequest(
+void DynamicArmorVariantsExtendedInterface::HandleInterfaceRequest(
     SKSE::MessagingInterface::Message *a_msg) {
-  if (a_msg->type != DynamicArmorVariantsAPI::DynamicArmorVariantsMessage::
-                         kMessage_QueryInterface) {
+  if (a_msg->type !=
+      DynamicArmorVariantsExtendedAPI::DynamicArmorVariantsExtendedMessage::
+          kMessage_QueryInterface) {
     return;
   }
 
-  auto *request =
-      static_cast<DynamicArmorVariantsAPI::DynamicArmorVariantsMessage *>(
-          a_msg->data);
+  auto *request = static_cast<
+      DynamicArmorVariantsExtendedAPI::DynamicArmorVariantsExtendedMessage *>(
+      a_msg->data);
   request->GetApiFunction = GetApiFunction;
-  logger::info("Provided DynamicArmorVariants API interface to {}"sv,
+  logger::info("Provided DynamicArmorVariantsExtended API interface to {}"sv,
                a_msg->sender);
 }

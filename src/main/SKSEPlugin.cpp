@@ -3,7 +3,7 @@
 #include "Papyrus/Papyrus.h"
 #include "Serialization.h"
 #include "WornFormUpdater.h"
-#include "api/DynamicArmorVariantsInterface.h"
+#include "api/DynamicArmorVariantsExtendedInterface.h"
 
 namespace {
 void InitializeLog() {
@@ -43,7 +43,8 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   SKSE::Init(a_skse);
   SKSE::GetMessagingInterface()->RegisterListener(
       nullptr, [](SKSE::MessagingInterface::Message *a_message) {
-        DynamicArmorVariantsInterface::HandleInterfaceRequest(a_message);
+        DynamicArmorVariantsExtendedInterface::HandleInterfaceRequest(
+            a_message);
       });
 
   Hooks::Install();
@@ -61,7 +62,7 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
     switch (a_msg->type) {
     case SKSE::MessagingInterface::kDataLoaded:
       ConfigLoader::LoadConfigs();
-      DynamicArmorVariantsInterface::SetReady(true);
+      DynamicArmorVariantsExtendedInterface::SetReady(true);
       WornFormUpdater::Install();
       break;
     }

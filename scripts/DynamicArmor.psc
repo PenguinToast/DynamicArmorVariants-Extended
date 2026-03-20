@@ -1,6 +1,6 @@
 Scriptname DynamicArmor Hidden
 
-; Gets the current Dynamic Armor Variants API version.
+; Gets the current Dynamic Armor Variants Extended API version.
 int Function GetAPIVersion() global native
 
 ; Gets available variants for an armor.

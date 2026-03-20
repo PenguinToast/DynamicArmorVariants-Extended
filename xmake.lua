@@ -2,7 +2,7 @@ set_xmakever("3.0.0")
 
 includes("lib/commonlibsse-ng")
 
-set_project("DynamicArmorVariants")
+set_project("DynamicArmorVariantsExtended")
 set_version("1.0.5")
 set_license("MIT")
 
@@ -19,6 +19,7 @@ add_requires("jsoncpp 1.9.6", "ordered_map 1.1.0")
 
 target("DynamicArmorVariants")
     set_kind("shared")
+    set_basename("DynamicArmorVariants")
 
     add_deps("commonlibsse-ng")
     add_packages("jsoncpp", "ordered_map")

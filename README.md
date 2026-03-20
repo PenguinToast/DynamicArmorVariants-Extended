@@ -34,7 +34,7 @@ To build from WSL and deploy into the `pt_test` MO2 modlist:
 ./scripts/build-deploy.sh debug
 ```
 
-By default this deploys to `/mnt/f/games/skyrim/modlists/pt_test/mods/dynamic_armor_variants_ng`. Set `MOD_DIR` to override the destination.
+By default this deploys to `/mnt/f/games/skyrim/modlists/pt_test/mods/dynamic_armor_variants_extended`. Set `MOD_DIR` to override the destination.
 The default deploy mode is `releasedbg`, so the script also deploys `DynamicArmorVariants.pdb` when available. Use `./scripts/build-deploy.sh release` for a stripped release build.
 
 The deploy step copies the built DLL, the repository `data/` tree, and the existing `DynamicArmor*.pex` scripts from `/mnt/f/games/skyrim/modlists/pt_test/mods/Dynamic Armor Variants/Scripts`. Set `PAPYRUS_SOURCE_MOD_DIR` to override that source mod path.
@@ -56,16 +56,16 @@ binary is a 32-bit build that crashes in this environment.
 PCH is the reliable way to lint these translation units.
 
 ## Public API
-DAV-NG exposes a versioned SKSE messaging API modeled after Modex.
+Dynamic Armor Variants Extended exposes a versioned SKSE messaging API modeled after Modex.
 
 Public consumer files:
-- `include/DynamicArmorVariantsAPI.h`
-- `include/DynamicArmorVariantsAPI.cpp`
+- `include/DynamicArmorVariantsExtendedAPI.h`
+- `include/DynamicArmorVariantsExtendedAPI.cpp`
 
 Fetch the interface after `SKSE::MessagingInterface::kPostLoad`:
 
 ```cpp
-auto* dav = DynamicArmorVariantsAPI::GetDynamicArmorVariantsInterface001();
+auto* dav = DynamicArmorVariantsExtendedAPI::GetDynamicArmorVariantsExtendedInterface001();
 ```
 
 Interface v001 exposes:
