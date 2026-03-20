@@ -25,8 +25,10 @@ public:
   void ClearCondition(std::string_view a_state);
 
   void VisitArmorAddons(
-      RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon,
-      const std::function<void(RE::TESObjectARMA *)> &a_visit) const;
+      RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
+      RE::TESObjectARMA *a_armorAddon,
+      const std::function<void(RE::TESObjectARMO *, RE::TESObjectARMA *)>
+          &a_visit) const;
 
   auto GetBipedObjectSlots(RE::Actor *a_actor, RE::TESObjectARMO *a_armor) const
       -> BipedObjectSlot;

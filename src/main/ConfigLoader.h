@@ -27,6 +27,8 @@ private:
   static auto NormalizeConditionsPayload(const Json::Value &a_root,
                                          Json::Value &a_conditions,
                                          Json::Value &a_refs) -> bool;
+  static auto ParseReplacementAddon(std::string_view a_identifier)
+      -> std::optional<ArmorVariant::ReplacementAddon>;
   static void LoadConfig(const fs::path &a_path);
 
   static void LoadVariant(std::string_view a_name,

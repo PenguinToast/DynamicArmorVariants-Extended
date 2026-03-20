@@ -2,6 +2,8 @@
 #include "DynamicArmorManager.h"
 #include "FormUtil.h"
 
+#include <array>
+
 auto ConfigLoader::ParseJson(std::string_view a_jsonText, Json::Value &a_root)
     -> bool {
   Json::CharReaderBuilder builder;
@@ -99,6 +101,70 @@ auto ConfigLoader::NormalizeConditionsPayload(const Json::Value &a_root,
 
   logger::error("Condition JSON must be an array or object"sv);
   return false;
+}
+
+auto ConfigLoader::ParseReplacementAddon(std::string_view a_identifier)
+    -> std::optional<ArmorVariant::ReplacementAddon> {
+  std::array<std::string, 4> parts;
+  std::size_t partCount = 0;
+  std::size_t start = 0;
+
+  while (true) {
+    const auto separator = a_identifier.find('|', start);
+    if (separator == std::string_view::npos) {
+      if (partCount >= parts.size()) {
+        logger::warn("Could not resolve replacement form: {}"sv, a_identifier);
+        return std::nullopt;
+      }
+
+      parts[partCount++] = std::string(a_identifier.substr(start));
+      break;
+    }
+
+    if (partCount >= parts.size()) {
+      logger::warn("Could not resolve replacement form: {}"sv, a_identifier);
+      return std::nullopt;
+    }
+
+    parts[partCount++] =
+        std::string(a_identifier.substr(start, separator - start));
+    start = separator + 1;
+  }
+
+  if (partCount == 2) {
+    auto *armorAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
+        std::string(a_identifier));
+    if (!armorAddon) {
+      logger::warn("Could not resolve form: {}"sv, a_identifier);
+      return std::nullopt;
+    }
+
+    return ArmorVariant::ReplacementAddon{
+        .Armor = nullptr,
+        .ArmorAddon = armorAddon,
+    };
+  }
+
+  if (partCount == 4) {
+    const auto armorIdentifier = parts[0] + "|" + parts[1];
+    const auto armorAddonIdentifier = parts[2] + "|" + parts[3];
+    auto *armor =
+        FormUtil::LookupByIdentifier<RE::TESObjectARMO>(armorIdentifier);
+    auto *armorAddon =
+        FormUtil::LookupByIdentifier<RE::TESObjectARMA>(armorAddonIdentifier);
+    if (!armor || !armorAddon) {
+      logger::warn("Could not resolve replacement form: {}"sv, a_identifier);
+      return std::nullopt;
+    }
+
+    return ArmorVariant::ReplacementAddon{
+        .Armor = armor,
+        .ArmorAddon = armorAddon,
+    };
+  }
+
+  logger::warn("Could not resolve replacement form: {}"sv, a_identifier);
+  return std::nullopt;
 }
 
 auto ConfigLoader::RegisterVariantJson(std::string_view a_name,
@@ -261,25 +327,17 @@ void ConfigLoader::LoadFormMap(Json::Value a_replaceByForm,
     if (!addon)
       continue;
 
-    std::vector<RE::TESObjectARMA *> replacementForms;
+    ArmorVariant::AddonList replacementForms;
 
     Json::Value addons = a_replaceByForm[formIdentifier];
     if (addons.isString()) {
-      if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-              addons.asString())) {
-
-        replacementForms.push_back(variantAddon);
-      } else {
-        logger::warn("Could not resolve form: {}"sv, addons.asString());
+      if (auto replacement = ParseReplacementAddon(addons.asString())) {
+        replacementForms.push_back(*replacement);
       }
     } else if (addons.isArray()) {
       for (auto &identifier : addons) {
-        if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-                identifier.asString())) {
-
-          replacementForms.push_back(variantAddon);
-        } else {
-          logger::warn("Could not resolve form: {}"sv, identifier.asString());
+        if (auto replacement = ParseReplacementAddon(identifier.asString())) {
+          replacementForms.push_back(*replacement);
         }
       }
     }
@@ -305,21 +363,17 @@ void ConfigLoader::LoadSlotMap(Json::Value a_replaceBySlot,
     if (bipedObject > 31)
       continue;
 
-    a_slotMap.emplace(bipedObject, std::vector<RE::TESObjectARMA *>());
+    a_slotMap.emplace(bipedObject, ArmorVariant::AddonList{});
 
     Json::Value addons = a_replaceBySlot[slotIndex];
     if (addons.isString()) {
-      if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-              addons.asString())) {
-
-        a_slotMap[bipedObject].push_back(variantAddon);
+      if (auto replacement = ParseReplacementAddon(addons.asString())) {
+        a_slotMap[bipedObject].push_back(*replacement);
       }
     } else if (addons.isArray()) {
       for (auto &identifier : addons) {
-        if (auto variantAddon = FormUtil::LookupByIdentifier<RE::TESObjectARMA>(
-                identifier.asString())) {
-
-          a_slotMap[bipedObject].push_back(variantAddon);
+        if (auto replacement = ParseReplacementAddon(identifier.asString())) {
+          a_slotMap[bipedObject].push_back(*replacement);
         }
       }
     } else {

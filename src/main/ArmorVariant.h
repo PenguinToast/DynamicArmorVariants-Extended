@@ -1,7 +1,12 @@
 #pragma once
 
 struct ArmorVariant {
-  using AddonList = std::vector<RE::TESObjectARMA *>;
+  struct ReplacementAddon {
+    RE::TESObjectARMO *Armor{nullptr};
+    RE::TESObjectARMA *ArmorAddon{nullptr};
+  };
+
+  using AddonList = std::vector<ReplacementAddon>;
   using FormMap = std::unordered_map<const RE::TESObjectARMA *, AddonList>;
   using SlotMap = std::map<BipedObject, AddonList>;
 

@@ -77,26 +77,33 @@ void DynamicArmorManager::ClearCondition(std::string_view a_state) {
 }
 
 void DynamicArmorManager::VisitArmorAddons(
-    RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon,
-    const std::function<void(RE::TESObjectARMA *)> &a_visit) const {
+    RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
+    RE::TESObjectARMA *a_armorAddon,
+    const std::function<void(RE::TESObjectARMO *, RE::TESObjectARMA *)>
+        &a_visit) const {
   // Observed from player-side runtime logs during equip/variant changes:
   // VisitArmorAddons runs before GetBipedObjectSlots, and Skyrim often performs
   // another VisitArmorAddons pass immediately after the slot-mask evaluation.
   std::unique_lock lock(_stateMutex);
   if (Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
-    a_visit(a_armorAddon);
+    a_visit(a_defaultArmor, a_armorAddon);
     return;
   }
 
   const auto &resolution =
       GetOrBuildArmorAddonResolution(a_actor, a_armorAddon);
   if (!resolution.ResolvedAddonList) {
-    a_visit(a_armorAddon);
+    a_visit(a_defaultArmor, a_armorAddon);
     return;
   }
 
-  for (auto *armorAddon : *resolution.ResolvedAddonList) {
-    a_visit(armorAddon);
+  for (const auto &replacement : *resolution.ResolvedAddonList) {
+    if (!replacement.ArmorAddon) {
+      continue;
+    }
+
+    a_visit(replacement.Armor ? replacement.Armor : a_defaultArmor,
+            replacement.ArmorAddon);
   }
 }
 
@@ -143,11 +150,12 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
       continue;
     }
 
-    for (auto *resolvedArmorAddon : *resolution.ResolvedAddonList) {
-      if (!resolvedArmorAddon) {
+    for (const auto &resolvedAddon : *resolution.ResolvedAddonList) {
+      if (!resolvedAddon.ArmorAddon) {
         continue;
       }
-      resolvedSlots |= resolvedArmorAddon->bipedModelData.bipedObjectSlots;
+      resolvedSlots |=
+          resolvedAddon.ArmorAddon->bipedModelData.bipedObjectSlots;
     }
   }
 
