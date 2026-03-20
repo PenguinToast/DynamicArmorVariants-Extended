@@ -2,7 +2,7 @@
 #include "main/DynamicArmorManager.h"
 
 #define REGISTER(a_vm, a_function)                                             \
-  a_vm->RegisterFunction(#a_function##sv, "DynamicArmor"sv, &a_function)
+  a_vm->RegisterFunction(#a_function##sv, "DynamicArmor"sv, &(a_function))
 
 namespace Papyrus {
 auto DynamicArmor::GetAPIVersion(RE::StaticFunctionTag *) -> std::int32_t {

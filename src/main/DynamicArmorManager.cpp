@@ -117,6 +117,8 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
   if (Ext::Actor::IsSkin(a_actor, a_armor))
     return slot.get();
 
+  auto resolvedSlots = decltype(slot){};
+  auto hasActiveVariant = false;
   auto overrideOption = ArmorVariant::OverrideOption::None;
 
   for (auto &armorAddon : a_armor->armorAddons) {
@@ -127,13 +129,32 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
     const auto &resolution =
         GetOrBuildArmorAddonResolution(a_actor, armorAddon);
     if (!resolution.ActiveVariant) {
+      resolvedSlots |= armorAddon->bipedModelData.bipedObjectSlots;
       continue;
     }
 
+    hasActiveVariant = true;
     if (util::to_underlying(resolution.ActiveVariant->OverrideHead) >
         util::to_underlying(overrideOption)) {
       overrideOption = resolution.ActiveVariant->OverrideHead;
     }
+
+    if (!resolution.ResolvedAddonList) {
+      continue;
+    }
+
+    for (auto *resolvedArmorAddon : *resolution.ResolvedAddonList) {
+      if (!resolvedArmorAddon) {
+        continue;
+      }
+      resolvedSlots |= resolvedArmorAddon->bipedModelData.bipedObjectSlots;
+    }
+  }
+
+  // Preserve vanilla armor-mask behavior when no active variant affects this
+  // armor, because some armors define slots differently from their addons.
+  if (hasActiveVariant) {
+    slot = resolvedSlots;
   }
 
   auto headSlot =
