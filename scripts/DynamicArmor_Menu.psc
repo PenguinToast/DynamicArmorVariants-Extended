@@ -22,9 +22,9 @@ Function OpenMenu(Actor akActor) global
 		Armor wornArmor = wornArmors[iArmor]
 		string[] variants = DynamicArmor.GetVariants(wornArmor)
 		if variants.Length > 0
-			int parent = menu.AddEntryItem(wornArmor.GetName(), entryHasChildren = true)
+			int parentEntry = menu.AddEntryItem(wornArmor.GetName(), entryHasChildren = true)
 
-			int defaultEntry = menu.AddEntryItem("$Default", entryParent = parent)
+			int defaultEntry = menu.AddEntryItem("$Default", entryParent = parentEntry)
 			variantCache[defaultEntry] = ""
 			armorCache[defaultEntry] = wornArmor
 
@@ -32,7 +32,7 @@ Function OpenMenu(Actor akActor) global
 			while iVariant < variants.Length
 				string variant = variants[iVariant]
 				string displayName = DynamicArmor.GetDisplayName(variant)
-				int entry = menu.AddEntryItem(displayName, entryParent = parent)
+				int entry = menu.AddEntryItem(displayName, entryParent = parentEntry)
 				variantCache[entry] = variant
 				armorCache[entry] = wornArmor
 				iVariant += 1

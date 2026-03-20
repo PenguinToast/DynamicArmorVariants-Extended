@@ -1,6 +1,8 @@
 build/
 buildVR/
+dist/
 package/
+tools/
 *.7z
 .xmake/
 compile_commands.json
