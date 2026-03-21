@@ -55,17 +55,54 @@ if [[ ! -x "${PAPYRUS_COMPILER_BIN}" ]]; then
     install -m 0755 "${TMP_DIR}/papyrus-compiler/papyrus" "${PAPYRUS_COMPILER_BIN}"
 fi
 
-rm -rf "${PAPYRUS_PEX_STAGE_DIR}" "${PAPYRUS_SOURCE_STAGE_DIR}"
 mkdir -p "${PAPYRUS_PEX_STAGE_DIR}" "${PAPYRUS_SOURCE_STAGE_DIR}"
 
+latest_mtime() {
+    local latest=0
+    local path=""
+
+    for path in "$@"; do
+        if [[ -e "${path}" ]]; then
+            local mtime
+            mtime="$(stat -c '%Y' "${path}")"
+            if ((mtime > latest)); then
+                latest="${mtime}"
+            fi
+        fi
+    done
+
+    printf '%s\n' "${latest}"
+}
+
+mapfile -t LOCAL_HEADERS < <(find "${LOCAL_HEADER_DIR}" -type f -name '*.psc' | sort)
+LOCAL_HEADERS_MTIME="$(latest_mtime "${LOCAL_HEADERS[@]}")"
+
+compiled_count=0
+skipped_count=0
+
 for source_file in "${PAPYRUS_SOURCES[@]}"; do
-    "${PAPYRUS_COMPILER_BIN}" compile \
-        -nocache \
-        -i "${source_file}" \
-        -o "${PAPYRUS_PEX_STAGE_DIR}" \
-        -h "${GAME_SOURCE_DIR}" \
-        -h "${SKSE_SOURCE_DIR}" \
-        -h "${LOCAL_HEADER_DIR}"
+    source_name="$(basename "${source_file}")"
+    source_stem="${source_name%.psc}"
+    pex_file="${PAPYRUS_PEX_STAGE_DIR}/${source_stem}.pex"
+
+    source_mtime="$(stat -c '%Y' "${source_file}")"
+    pex_mtime=0
+    if [[ -f "${pex_file}" ]]; then
+        pex_mtime="$(stat -c '%Y' "${pex_file}")"
+    fi
+
+    if [[ ! -f "${pex_file}" ]] || ((source_mtime > pex_mtime)) || ((LOCAL_HEADERS_MTIME > pex_mtime)); then
+        "${PAPYRUS_COMPILER_BIN}" compile \
+            -nocache \
+            -i "${source_file}" \
+            -o "${PAPYRUS_PEX_STAGE_DIR}" \
+            -h "${GAME_SOURCE_DIR}" \
+            -h "${SKSE_SOURCE_DIR}" \
+            -h "${LOCAL_HEADER_DIR}"
+        ((compiled_count += 1))
+    else
+        ((skipped_count += 1))
+    fi
 done
 
 for source_file in "${PAPYRUS_SOURCES[@]}"; do
@@ -74,3 +111,4 @@ done
 
 echo "Compiled Papyrus scripts to ${PAPYRUS_PEX_STAGE_DIR}"
 echo "Staged Papyrus sources to ${PAPYRUS_SOURCE_STAGE_DIR}"
+echo "Papyrus compile summary: ${compiled_count} compiled, ${skipped_count} skipped"
