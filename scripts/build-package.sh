@@ -85,15 +85,49 @@ if [[ ! -f "${PLUGIN_SRC}" ]]; then
 fi
 
 rm -rf "${STAGE_DIR}"
-mkdir -p "${STAGE_DIR}/SKSE/Plugins" "${STAGE_DIR}/fomod"
+mkdir -p \
+    "${STAGE_DIR}/Data/Scripts" \
+    "${STAGE_DIR}/Data/Source/Scripts" \
+    "${STAGE_DIR}/SkyrimSE/SKSE/Plugins" \
+    "${STAGE_DIR}/SkyrimVR/SKSE/Plugins" \
+    "${STAGE_DIR}/UIExtensions_Menu/Interface/Translations" \
+    "${STAGE_DIR}/UIExtensions_Menu/MCM/Config/DynamicArmorMenu" \
+    "${STAGE_DIR}/UIExtensions_Menu/Scripts" \
+    "${STAGE_DIR}/UIExtensions_Menu/Source/Scripts" \
+    "${STAGE_DIR}/HiddenEquipment/Interface/Translations" \
+    "${STAGE_DIR}/HiddenEquipment/SKSE/Plugins/DynamicArmorVariants" \
+    "${STAGE_DIR}/fomod"
 
-cp -R "${REPO_ROOT}/data/." "${STAGE_DIR}/"
-cp "${PLUGIN_SRC}" "${STAGE_DIR}/SKSE/Plugins/${PLUGIN_NAME}.dll"
+cp -R "${REPO_ROOT}/data/fomod/." "${STAGE_DIR}/fomod/"
+
+cp "${PLUGIN_SRC}" "${STAGE_DIR}/SkyrimSE/SKSE/Plugins/${PLUGIN_NAME}.dll"
+cp "${PLUGIN_SRC}" "${STAGE_DIR}/SkyrimVR/SKSE/Plugins/${PLUGIN_NAME}.dll"
 if [[ -f "${PDB_SRC}" ]]; then
-    cp "${PDB_SRC}" "${STAGE_DIR}/SKSE/Plugins/${PLUGIN_NAME}.pdb"
+    cp "${PDB_SRC}" "${STAGE_DIR}/SkyrimSE/SKSE/Plugins/${PLUGIN_NAME}.pdb"
+    cp "${PDB_SRC}" "${STAGE_DIR}/SkyrimVR/SKSE/Plugins/${PLUGIN_NAME}.pdb"
 fi
-cp -R "${PAPYRUS_BUILD_DIR}/Scripts/." "${STAGE_DIR}/Scripts/"
-cp -R "${PAPYRUS_BUILD_DIR}/Source/." "${STAGE_DIR}/Source/"
+
+cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor.pex" "${STAGE_DIR}/Data/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor.psc" "${STAGE_DIR}/Data/Source/Scripts/"
+
+cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor_MCM.pex" "${STAGE_DIR}/UIExtensions_Menu/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor_Menu.pex" "${STAGE_DIR}/UIExtensions_Menu/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor_MenuPower.pex" "${STAGE_DIR}/UIExtensions_Menu/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor_MCM.psc" "${STAGE_DIR}/UIExtensions_Menu/Source/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor_Menu.psc" "${STAGE_DIR}/UIExtensions_Menu/Source/Scripts/"
+cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor_MenuPower.psc" "${STAGE_DIR}/UIExtensions_Menu/Source/Scripts/"
+
+cp "${REPO_ROOT}/data/DynamicArmorMenu.esp" "${STAGE_DIR}/UIExtensions_Menu/"
+cp "${REPO_ROOT}/data/Interface/Translations/DynamicArmorMenu_ENGLISH.txt" \
+    "${STAGE_DIR}/UIExtensions_Menu/Interface/Translations/"
+cp -R "${REPO_ROOT}/data/MCM/Config/DynamicArmorMenu/." \
+    "${STAGE_DIR}/UIExtensions_Menu/MCM/Config/DynamicArmorMenu/"
+
+cp "${REPO_ROOT}/data/DAV_HiddenEquipment.esp" "${STAGE_DIR}/HiddenEquipment/"
+cp "${REPO_ROOT}/data/Interface/Translations/DAV_HiddenEquipment_ENGLISH.txt" \
+    "${STAGE_DIR}/HiddenEquipment/Interface/Translations/"
+cp "${REPO_ROOT}/data/SKSE/Plugins/DynamicArmorVariants/DAV_HiddenEquipment.json" \
+    "${STAGE_DIR}/HiddenEquipment/SKSE/Plugins/DynamicArmorVariants/"
 
 python3 - <<'PY' "${STAGE_DIR}/fomod"
 from pathlib import Path
