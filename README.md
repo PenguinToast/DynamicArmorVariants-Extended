@@ -1,7 +1,7 @@
 Framework for mods to define armor variants by swapping armor addons dynamically at runtime.
 
 ## Dynamic Armor Variants Extended
-`Dynamic Armor Variants Extended` is a maintained fork of the original Dynamic Armor Variants by Parapets.
+`Dynamic Armor Variants Extended` is a fork of the original Dynamic Armor Variants by Parapets, extended with new features/native API.
 
 Runtime compatibility intentionally stays close to the original project:
 - plugin name remains `DynamicArmorVariants.dll`
@@ -10,16 +10,10 @@ Runtime compatibility intentionally stays close to the original project:
 
 ## Updates From Original DAV
 - Added a public SKSE messaging API for native integrations.
+- Added support for registration/deletion of new variants at runtime.
 - Added support for replacement identifiers that specify both owning armor and armor addon.
-- Added actor refresh support through the API.
-- Added resolution caching for armor addon lookups.
-- Added a 500-entry cache with a short TTL to avoid stale state.
-- Added thread-safety around mutable manager state.
-- Improved slot-mask resolution so active replacement addons drive occupied slots.
-- Added race filtering for resolved replacement addon lists.
-- Modernized the build, lint, format, deploy, and packaging workflow.
-- Added Papyrus build tooling and packaged `.psc` sources in releases.
-- Updated release packaging to produce a FOMOD layout compatible with the original DAV installer.
+  - This lets variants render in completely disjoint slots from the original armor, so long as the actor doesn't have a conflict
+- Added caching around variant resolution for minor performance improvements.
 
 ## Config Format
 Variant replacement maps support two replacement identifier forms:
