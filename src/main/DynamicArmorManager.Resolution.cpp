@@ -209,58 +209,65 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
 
   std::unordered_map<std::string_view, const ArmorVariant::AddonList *>
       linkedAddonLists;
-  const auto resolvePass = [&](auto &&isActive) {
-    const ArmorVariant::AddonList *stateAddonList = nullptr;
-    const ArmorVariant::AddonList *linkedAddonList = nullptr;
-    std::string activeVariantState;
-    const ArmorVariant *activeVariant = nullptr;
+  std::unordered_map<std::string, std::uint64_t> overridePriorityByName;
+  if (const auto overrideIt = _variantOverrides.find(a_actor->GetFormID());
+      overrideIt != _variantOverrides.end()) {
+    overridePriorityByName = overrideIt->second;
+  }
 
-    linkedAddonLists.clear();
+  const ArmorVariant *activeVariant = nullptr;
+  const ArmorVariant::AddonList *stateAddonList = nullptr;
+  const ArmorVariant::AddonList *linkedAddonList = nullptr;
+  std::string activeVariantState;
+  std::uint64_t activePriority = 0;
 
-    for (auto &[name, variant] : _variants) {
-      const auto *addonList = variant.GetAddonList(a_armorAddon);
-      if (!addonList) {
-        continue;
-      }
+  linkedAddonLists.clear();
 
-      if (!variant.Linked.empty()) {
-        linkedAddonLists.insert_or_assign(variant.Linked, addonList);
-        if (variant.Linked == activeVariantState) {
-          linkedAddonList = addonList;
-        }
-      }
+  for (auto &[name, variant] : _variants) {
+    const auto *addonList = variant.GetAddonList(a_armorAddon);
+    if (!addonList) {
+      continue;
+    }
 
-      if (!isActive(name)) {
-        continue;
-      }
-
-      activeVariantState = name;
-      activeVariant = std::addressof(variant);
-      stateAddonList = addonList;
-      if (const auto it = linkedAddonLists.find(activeVariantState);
-          it != linkedAddonLists.end()) {
-        linkedAddonList = it->second;
-      } else {
-        linkedAddonList = nullptr;
+    if (!variant.Linked.empty()) {
+      linkedAddonLists.insert_or_assign(variant.Linked, addonList);
+      if (variant.Linked == activeVariantState) {
+        linkedAddonList = addonList;
       }
     }
 
-    if (!activeVariant) {
-      return false;
+    std::uint64_t candidatePriority = 0;
+    if (const auto overrideIt = overridePriorityByName.find(name);
+        overrideIt != overridePriorityByName.end()) {
+      candidatePriority = (1ull << 63) + overrideIt->second;
+    } else if (IsVariantConditionLocked(a_actor, name)) {
+      candidatePriority = 1;
     }
 
+    if (candidatePriority < activePriority) {
+      continue;
+    }
+
+    if (candidatePriority == 0) {
+      continue;
+    }
+
+    activePriority = candidatePriority;
+    activeVariantState = name;
+    activeVariant = std::addressof(variant);
+    stateAddonList = addonList;
+    if (const auto it = linkedAddonLists.find(activeVariantState);
+        it != linkedAddonLists.end()) {
+      linkedAddonList = it->second;
+    } else {
+      linkedAddonList = nullptr;
+    }
+  }
+
+  if (activeVariant) {
     resolution.ActiveVariant = activeVariant;
     resolution.ResolvedAddonList = FilterAddonListForRace(
         linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
-    return true;
-  };
-
-  if (!resolvePass([&](std::string_view a_state) {
-        return IsVariantOverrideLocked(a_actor, a_state);
-      })) {
-    resolvePass([&](std::string_view a_state) {
-      return IsVariantConditionLocked(a_actor, a_state);
-    });
   }
 
   return resolution;

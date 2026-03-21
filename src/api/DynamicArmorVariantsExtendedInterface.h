@@ -18,9 +18,10 @@ public:
   bool SetVariantConditionsJson(const char *a_name,
                                 const char *a_conditionsJson) override;
   bool RefreshActor(RE::Actor *a_actor) override;
-  bool ApplyVariantOverride(RE::Actor *a_actor, const char *a_variant) override;
-  bool RemoveVariantOverride(RE::Actor *a_actor,
-                             const char *a_variant) override;
+  bool ApplyVariantOverride(RE::Actor *a_actor, const char *a_variant,
+                            bool a_restoreSuppressed = false) override;
+  bool RemoveVariantOverride(RE::Actor *a_actor, const char *a_variant,
+                             bool a_restoreSuppressed = false) override;
 
   static void SetReady(bool a_ready);
   static void HandleInterfaceRequest(SKSE::MessagingInterface::Message *a_msg);

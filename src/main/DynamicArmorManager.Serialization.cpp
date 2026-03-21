@@ -15,11 +15,19 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
   Json::Value value;
 
   Json::Value variantOverrides;
-  for (auto &[formID, variantSet] : _variantOverrides) {
+  for (auto &[formID, variantMap] : _variantOverrides) {
     Json::Value variantOverride;
 
     Json::Value variants;
-    for (auto &variant : variantSet) {
+    std::vector<std::pair<std::string, std::uint64_t>> orderedVariants;
+    orderedVariants.reserve(variantMap.size());
+    for (const auto &[variant, sequence] : variantMap) {
+      orderedVariants.emplace_back(variant, sequence);
+    }
+    std::ranges::sort(orderedVariants, {},
+                      &std::pair<std::string, std::uint64_t>::second);
+
+    for (const auto &[variant, _] : orderedVariants) {
       variants.append(variant);
     }
 
@@ -40,6 +48,8 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
 void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
+  _variantOverrides.clear();
+  _nextOverrideSequence = 1;
   std::uint32_t type;
   std::uint32_t version;
   std::uint32_t length;
@@ -89,9 +99,9 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
     RE::FormID formID;
     a_skse->ResolveFormID(variantOverride["actor"].asUInt(), formID);
 
-    auto [it, inserted] =
-        _variantOverrides.emplace(formID, std::unordered_set<std::string>());
-    auto &variantSet = it->second;
+    auto [it, inserted] = _variantOverrides.emplace(
+        formID, std::unordered_map<std::string, std::uint64_t>{});
+    auto &variantMap = it->second;
 
     auto &variants = variantOverride["variants"];
     if (!variants.isArray()) {
@@ -100,7 +110,8 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
 
     for (auto &variant : variants) {
       if (variant.isString()) {
-        variantSet.insert(variant.asString());
+        variantMap.insert_or_assign(variant.asString(),
+                                    _nextOverrideSequence++);
       }
     }
   }
@@ -110,4 +121,5 @@ void DynamicArmorManager::Revert() {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
   _variantOverrides.clear();
+  _nextOverrideSequence = 1;
 }

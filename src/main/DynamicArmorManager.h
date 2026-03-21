@@ -6,6 +6,7 @@
 #include <chrono>
 #include <shared_mutex>
 #include <unordered_set>
+#include <vector>
 
 class DynamicArmorManager {
 public:
@@ -41,12 +42,15 @@ public:
 
   auto GetDisplayName(const std::string &a_variant) const -> std::string;
 
-  void ApplyVariant(RE::Actor *a_actor, const std::string &a_variant);
+  void ApplyVariant(RE::Actor *a_actor, const std::string &a_variant,
+                    bool a_restoreSuppressed = false);
 
   void ApplyVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor,
-                    const std::string &a_variant);
+                    const std::string &a_variant,
+                    bool a_restoreSuppressed = false);
 
-  void RemoveVariantOverride(RE::Actor *a_actor, const std::string &a_variant);
+  void RemoveVariantOverride(RE::Actor *a_actor, const std::string &a_variant,
+                             bool a_restoreSuppressed = false);
 
   void ResetVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor);
 
@@ -84,13 +88,23 @@ private:
   void ClearArmorAddonResolutionCache() const;
   auto GetVariantsLocked(RE::TESObjectARMO *a_armor) const
       -> std::vector<std::string>;
+  auto CollectAffectedWornArmorsLocked(RE::Actor *a_actor,
+                                       const ArmorVariant &a_variant) const
+      -> std::vector<RE::TESObjectARMO *>;
+  static void SetOverrideSequenceLocked(
+      std::unordered_map<std::string, std::uint64_t> &a_overrides,
+      std::string_view a_variant, std::uint64_t a_sequence);
+  static void RemoveOverrideLocked(
+      std::unordered_map<std::string, std::uint64_t> &a_overrides,
+      std::string_view a_variant);
 
   tsl::ordered_map<std::string, ArmorVariant> _variants;
 
   std::unordered_map<std::string, std::shared_ptr<RE::TESCondition>>
       _conditions;
-  std::unordered_map<RE::FormID, std::unordered_set<std::string>>
+  std::unordered_map<RE::FormID, std::unordered_map<std::string, std::uint64_t>>
       _variantOverrides;
+  std::uint64_t _nextOverrideSequence{1};
   mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{
       ArmorAddonResolutionCacheCapacity, ArmorAddonResolutionCacheTtl};
   mutable std::shared_mutex _stateMutex;

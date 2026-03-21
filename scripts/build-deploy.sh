@@ -8,7 +8,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 MODE="releasedbg"
 CLEAN=0
 PLUGIN_NAME="DynamicArmorVariants"
-DEFAULT_MOD_DIR="/mnt/f/games/skyrim/modlists/pt_test/mods/dynamic_armor_variants_extended"
+DEFAULT_MOD_DIR="/mnt/f/games/skyrim/modlists/pt_test/mods/Dynamic Armor Variants Extended"
 MOD_DIR="${MOD_DIR:-$DEFAULT_MOD_DIR}"
 
 while (($#)); do
