@@ -1,4 +1,25 @@
-Framework for mods to define variants of armors by swapping armor addons dynamically at runtime.
+Framework for mods to define armor variants by swapping armor addons dynamically at runtime.
+
+## Dynamic Armor Variants Extended
+`Dynamic Armor Variants Extended` is a maintained fork of the original Dynamic Armor Variants by Parapets.
+
+Runtime compatibility intentionally stays close to the original project:
+- plugin name remains `DynamicArmorVariants.dll`
+- save data code remains compatible with the original DAV plugin
+- config loading still uses `Data/SKSE/Plugins/DynamicArmorVariants`
+
+## Updates From Original DAV
+- Added a public SKSE messaging API for native integrations.
+- Added support for replacement identifiers that specify both owning armor and armor addon.
+- Added actor refresh support through the API.
+- Added resolution caching for armor addon lookups.
+- Added a 500-entry cache with a short TTL to avoid stale state.
+- Added thread-safety around mutable manager state.
+- Improved slot-mask resolution so active replacement addons drive occupied slots.
+- Added race filtering for resolved replacement addon lists.
+- Modernized the build, lint, format, deploy, and packaging workflow.
+- Added Papyrus build tooling and packaged `.psc` sources in releases.
+- Updated release packaging to produce a FOMOD layout compatible with the original DAV installer.
 
 ## Config Format
 Variant replacement maps support two replacement identifier forms:
@@ -57,10 +78,32 @@ To build from WSL and deploy into the `pt_test` MO2 modlist:
 ./scripts/build-deploy.sh debug
 ```
 
-By default this deploys to `/mnt/f/games/skyrim/modlists/pt_test/mods/dynamic_armor_variants_extended`. Set `MOD_DIR` to override the destination.
+By default this deploys to `/mnt/f/games/skyrim/modlists/pt_test/mods/Dynamic Armor Variants Extended`. Set `MOD_DIR` to override the destination.
 The default deploy mode is `releasedbg`, so the script also deploys `DynamicArmorVariants.pdb` when available. Use `./scripts/build-deploy.sh release` for a stripped release build.
 
-The deploy step copies the built DLL, the repository `data/` tree, and the existing `DynamicArmor*.pex` scripts from `/mnt/f/games/skyrim/modlists/pt_test/mods/Dynamic Armor Variants/Scripts`. Set `PAPYRUS_SOURCE_MOD_DIR` to override that source mod path.
+The deploy step copies the built DLL, the repository `data/` tree, and compiled Papyrus output.
+
+## Build And Package
+To build a release archive:
+
+```bash
+./scripts/build-package.sh
+```
+
+This writes a zip under `dist/` named like:
+`Dynamic Armor Variants Extended v1.1.0.zip`
+
+The package script will fail unless:
+- the worktree is clean
+- `HEAD` has exactly one tag
+- that tag is valid semver
+
+The release package includes:
+- a FOMOD installer layout compatible with the original DAV package structure
+- `DynamicArmorVariants.dll`
+- `DynamicArmorVariants.pdb`
+- compiled Papyrus `.pex`
+- Papyrus source `.psc`
 
 ## Lint And Format
 ```bash
@@ -79,7 +122,7 @@ binary is a 32-bit build that crashes in this environment.
 PCH is the reliable way to lint these translation units.
 
 ## Public API
-Dynamic Armor Variants Extended exposes a versioned SKSE messaging API modeled after Modex.
+Dynamic Armor Variants Extended exposes a versioned SKSE messaging API for native integrations.
 
 Public consumer files:
 - `include/DynamicArmorVariantsExtendedAPI.h`
@@ -91,10 +134,13 @@ Fetch the interface after `SKSE::MessagingInterface::kPostLoad`:
 auto* dav = DynamicArmorVariantsExtendedAPI::GetDynamicArmorVariantsExtendedInterface001();
 ```
 
-Interface v001 exposes:
+Interface `001` exposes:
 - `RegisterVariantJson(name, variantJson)`
 - `DeleteVariant(name)`
 - `SetVariantConditionsJson(name, conditionsJson)`
+- `RefreshActor(actor)`
+- `ApplyVariantOverride(actor, variantName, keepExistingOverrides = false)`
+- `RemoveVariantOverride(actor, variantName)`
 
 `RegisterVariantJson` expects the same JSON object shape as a single entry in the `variants` array from the config files. If the variant already exists, it is fully overwritten.
 
