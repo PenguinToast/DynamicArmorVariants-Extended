@@ -43,14 +43,13 @@ public:
   auto GetDisplayName(const std::string &a_variant) const -> std::string;
 
   void ApplyVariant(RE::Actor *a_actor, const std::string &a_variant,
-                    bool a_restoreSuppressed = false);
+                    bool a_keepExistingOverrides = false);
 
   void ApplyVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor,
                     const std::string &a_variant,
-                    bool a_restoreSuppressed = false);
+                    bool a_keepExistingOverrides = false);
 
-  void RemoveVariantOverride(RE::Actor *a_actor, const std::string &a_variant,
-                             bool a_restoreSuppressed = false);
+  void RemoveVariantOverride(RE::Actor *a_actor, const std::string &a_variant);
 
   void ResetVariant(RE::Actor *a_actor, const RE::TESObjectARMO *a_armor);
 

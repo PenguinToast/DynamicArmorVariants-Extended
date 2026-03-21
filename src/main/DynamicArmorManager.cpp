@@ -330,8 +330,7 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
 }
 
 void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
-                                                const std::string &a_variant,
-                                                bool) {
+                                                const std::string &a_variant) {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
   auto it = _variantOverrides.find(a_actor->GetFormID());

@@ -49,24 +49,24 @@ bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
 }
 
 bool DynamicArmorVariantsExtendedInterface::ApplyVariantOverride(
-    RE::Actor *a_actor, const char *a_variant, bool a_restoreSuppressed) {
+    RE::Actor *a_actor, const char *a_variant, bool a_keepExistingOverrides) {
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
   }
 
   DynamicArmorManager::GetSingleton()->ApplyVariant(
-      a_actor, std::string(a_variant), a_restoreSuppressed);
+      a_actor, std::string(a_variant), a_keepExistingOverrides);
   return true;
 }
 
 bool DynamicArmorVariantsExtendedInterface::RemoveVariantOverride(
-    RE::Actor *a_actor, const char *a_variant, bool a_restoreSuppressed) {
+    RE::Actor *a_actor, const char *a_variant) {
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
   }
 
   DynamicArmorManager::GetSingleton()->RemoveVariantOverride(
-      a_actor, std::string(a_variant), a_restoreSuppressed);
+      a_actor, std::string(a_variant));
   return true;
 }
 
