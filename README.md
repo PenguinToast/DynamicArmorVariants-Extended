@@ -8,6 +8,8 @@ Runtime compatibility intentionally stays close to the original project:
 - save data code remains compatible with the original DAV plugin
 - config loading still uses `Data/SKSE/Plugins/DynamicArmorVariants`
 
+Changes 100% vibecoded with Codex
+
 ## Updates From Original DAV
 - Added a public SKSE messaging API for native integrations.
 - Added support for registration/deletion of new variants at runtime.
