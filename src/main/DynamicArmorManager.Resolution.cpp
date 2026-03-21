@@ -111,8 +111,12 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
       if (!resolvedAddon.ArmorAddon) {
         continue;
       }
-      resolvedSlots |=
-          resolvedAddon.ArmorAddon->bipedModelData.bipedObjectSlots;
+      if (resolvedAddon.Armor) {
+        resolvedSlots |= resolvedAddon.Armor->bipedModelData.bipedObjectSlots;
+      } else {
+        resolvedSlots |=
+            resolvedAddon.ArmorAddon->bipedModelData.bipedObjectSlots;
+      }
     }
   }
 
