@@ -47,7 +47,6 @@ POWERSHELL_CMD="
 Set-Location -LiteralPath '$WIN_REPO_ROOT'
 \$env:DAVE_BUILD_VERSION = '$DAVE_BUILD_VERSION'
 \$env:DAVE_BUILD_VERSION_STRING = '$DAVE_BUILD_VERSION_STRING'
-xmake f -y -c
 xmake f -y -m '$MODE'
 xmake build -y
 "
