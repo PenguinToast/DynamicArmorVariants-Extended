@@ -41,11 +41,7 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
   SKSE::Init(a_skse);
-  SKSE::GetMessagingInterface()->RegisterListener(
-      nullptr, [](SKSE::MessagingInterface::Message *a_message) {
-        DynamicArmorVariantsExtendedInterface::HandleInterfaceRequest(
-            a_message);
-      });
+  auto *messaging = SKSE::GetMessagingInterface();
 
   Hooks::Install();
 
@@ -58,8 +54,15 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
     serialization->SetRevertCallback(&Serialization::RevertCallback);
   }
 
-  SKSE::GetMessagingInterface()->RegisterListener([](auto a_msg) {
+  messaging->RegisterListener([](auto a_msg) {
     switch (a_msg->type) {
+    case SKSE::MessagingInterface::kPostLoad:
+      SKSE::GetMessagingInterface()->RegisterListener(
+          nullptr, [](SKSE::MessagingInterface::Message *a_message) {
+            DynamicArmorVariantsExtendedInterface::HandleInterfaceRequest(
+                a_message);
+          });
+      break;
     case SKSE::MessagingInterface::kDataLoaded:
       ConfigLoader::LoadConfigs();
       DynamicArmorVariantsExtendedInterface::SetReady(true);

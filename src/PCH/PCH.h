@@ -57,8 +57,8 @@ inline auto MakeHook(REL::VariantOffset a_address,
 }
 } // namespace util
 
-#define MAKE_OFFSET(a_idSE, a_offsetVR)                                        \
-  REL::VariantID((a_idSE), (a_idSE), (a_offsetVR))
+#define MAKE_OFFSET(a_idSE, a_idAE, a_offsetVR)                                \
+  REL::VariantID((a_idSE), (a_idAE), (a_offsetVR))
 
 #define DLLEXPORT __declspec(dllexport)
 
