@@ -88,8 +88,7 @@ rm -rf "${STAGE_DIR}"
 mkdir -p \
     "${STAGE_DIR}/Data/Scripts" \
     "${STAGE_DIR}/Data/Source/Scripts" \
-    "${STAGE_DIR}/SkyrimSE/SKSE/Plugins" \
-    "${STAGE_DIR}/SkyrimVR/SKSE/Plugins" \
+    "${STAGE_DIR}/Data/SKSE/Plugins" \
     "${STAGE_DIR}/UIExtensions_Menu/Interface/Translations" \
     "${STAGE_DIR}/UIExtensions_Menu/MCM/Config/DynamicArmorMenu" \
     "${STAGE_DIR}/UIExtensions_Menu/Scripts" \
@@ -100,11 +99,9 @@ mkdir -p \
 
 cp -R "${REPO_ROOT}/data/fomod/." "${STAGE_DIR}/fomod/"
 
-cp "${PLUGIN_SRC}" "${STAGE_DIR}/SkyrimSE/SKSE/Plugins/${PLUGIN_NAME}.dll"
-cp "${PLUGIN_SRC}" "${STAGE_DIR}/SkyrimVR/SKSE/Plugins/${PLUGIN_NAME}.dll"
+cp "${PLUGIN_SRC}" "${STAGE_DIR}/Data/SKSE/Plugins/${PLUGIN_NAME}.dll"
 if [[ -f "${PDB_SRC}" ]]; then
-    cp "${PDB_SRC}" "${STAGE_DIR}/SkyrimSE/SKSE/Plugins/${PLUGIN_NAME}.pdb"
-    cp "${PDB_SRC}" "${STAGE_DIR}/SkyrimVR/SKSE/Plugins/${PLUGIN_NAME}.pdb"
+    cp "${PDB_SRC}" "${STAGE_DIR}/Data/SKSE/Plugins/${PLUGIN_NAME}.pdb"
 fi
 
 cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor.pex" "${STAGE_DIR}/Data/Scripts/"
