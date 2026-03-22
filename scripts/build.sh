@@ -34,6 +34,8 @@ if ! command -v wslpath >/dev/null 2>&1; then
     exit 1
 fi
 
+DAVE_BUILD_VERSION="$("${SCRIPT_DIR}/version.sh" --numeric)"
+DAVE_BUILD_VERSION_STRING="$("${SCRIPT_DIR}/version.sh" --display)"
 WIN_REPO_ROOT="$(wslpath -w "$REPO_ROOT")"
 
 if ((CLEAN)); then
@@ -43,6 +45,8 @@ fi
 POWERSHELL_CMD="
 \$ErrorActionPreference = 'Stop'
 Set-Location -LiteralPath '$WIN_REPO_ROOT'
+\$env:DAVE_BUILD_VERSION = '$DAVE_BUILD_VERSION'
+\$env:DAVE_BUILD_VERSION_STRING = '$DAVE_BUILD_VERSION_STRING'
 xmake f -y -c
 xmake f -y -m '$MODE'
 xmake build -y
@@ -51,3 +55,4 @@ xmake build -y
 powershell.exe -NoProfile -Command "$POWERSHELL_CMD"
 
 echo "Built DynamicArmorVariants (${MODE})"
+echo "Version ${DAVE_BUILD_VERSION_STRING}"

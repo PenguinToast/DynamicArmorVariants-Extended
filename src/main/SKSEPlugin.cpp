@@ -38,9 +38,9 @@ void InitializeLog() {
 extern "C" DLLEXPORT bool SKSEAPI
 SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   InitializeLog();
-  logger::info("{} v{}"sv, Plugin::NAME, Plugin::VERSION.string());
 
   SKSE::Init(a_skse);
+  logger::info("{} build {}"sv, Plugin::NAME, Plugin::VERSION_STRING);
   auto *messaging = SKSE::GetMessagingInterface();
 
   Hooks::Install();
