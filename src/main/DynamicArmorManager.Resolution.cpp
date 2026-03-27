@@ -130,10 +130,11 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
       static_cast<BipedObjectSlot>(1 << race->data.headObject.get());
   auto hairSlot =
       static_cast<BipedObjectSlot>(1 << race->data.hairObject.get());
+  constexpr auto beardSlot = BipedObjectSlot::kModMouth;
 
   switch (overrideOption) {
   case ArmorVariant::OverrideOption::ShowAll:
-    slot.reset(headSlot, hairSlot);
+    slot.reset(headSlot, hairSlot, beardSlot);
     break;
   case ArmorVariant::OverrideOption::ShowHead:
     slot.reset(headSlot);
@@ -142,7 +143,7 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
     slot.set(headSlot);
     break;
   case ArmorVariant::OverrideOption::HideAll:
-    slot.set(headSlot, hairSlot);
+    slot.set(headSlot, hairSlot, beardSlot);
     break;
   }
 
