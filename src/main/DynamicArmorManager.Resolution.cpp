@@ -3,11 +3,23 @@
 #include "Ext/Actor.h"
 #include "Ext/TESObjectARMA.h"
 
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <unordered_map>
 
 namespace {
+auto BuildConditionPriority(const ArmorVariant &a_variant) -> std::uint64_t {
+  constexpr auto kPriorityBias =
+      static_cast<std::int64_t>((std::numeric_limits<std::int32_t>::max)()) +
+      1;
+
+  return static_cast<std::uint64_t>(
+             static_cast<std::int64_t>(a_variant.Priority.value_or(0)) +
+             kPriorityBias) +
+         1;
+}
+
 auto FilterAddonListForRace(const ArmorVariant::AddonList *a_addonList,
                             RE::TESRace *a_race)
     -> std::optional<ArmorVariant::AddonList> {
@@ -246,7 +258,7 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
         overrideIt != overridePriorityByName.end()) {
       candidatePriority = (1ull << 63) + overrideIt->second;
     } else if (IsVariantConditionLocked(a_actor, name)) {
-      candidatePriority = 1;
+      candidatePriority = BuildConditionPriority(variant);
     }
 
     if (candidatePriority < activePriority) {

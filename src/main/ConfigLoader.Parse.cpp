@@ -74,6 +74,9 @@ auto ConfigLoader::BuildArmorVariant(const Json::Value &a_variantJson,
 
   a_variant.Linked = a_variantJson["linkTo"].asString();
   a_variant.DisplayName = a_variantJson["displayName"].asString();
+  if (a_variantJson["priority"].isInt()) {
+    a_variant.Priority = a_variantJson["priority"].asInt();
+  }
   a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
 
   LoadFormMap(a_variantJson["replaceByForm"], a_variant.ReplaceByForm);

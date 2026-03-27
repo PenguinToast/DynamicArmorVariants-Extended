@@ -67,6 +67,10 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name,
     variant.DisplayName = a_variant.DisplayName;
   }
 
+  if (a_variant.Priority.has_value()) {
+    variant.Priority = a_variant.Priority;
+  }
+
   if (a_variant.OverrideHead != ArmorVariant::OverrideOption::Undefined) {
     variant.OverrideHead = a_variant.OverrideHead;
   }

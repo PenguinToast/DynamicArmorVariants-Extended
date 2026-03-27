@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 struct ArmorVariant {
   struct ReplacementAddon {
     RE::TESObjectARMO *Armor{nullptr};
@@ -33,6 +35,7 @@ struct ArmorVariant {
 
   std::string Linked;
   std::string DisplayName;
+  std::optional<std::int32_t> Priority;
   OverrideOption OverrideHead;
   FormMap ReplaceByForm;
   SlotMap ReplaceBySlot;
