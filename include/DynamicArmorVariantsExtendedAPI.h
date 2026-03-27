@@ -3,6 +3,8 @@
 #include <RE/Skyrim.h>
 #include <SKSE/SKSE.h>
 
+#include <memory>
+
 namespace DynamicArmorVariantsExtendedAPI {
 constexpr auto DynamicArmorVariantsExtendedPluginName = "DynamicArmorVariants";
 
@@ -23,6 +25,9 @@ struct IDynamicArmorVariantsExtendedInterface001 {
   virtual bool DeleteVariant(const char *a_name) = 0;
   virtual bool SetVariantConditionsJson(const char *a_name,
                                         const char *a_conditionsJson) = 0;
+  virtual bool SetCondition(
+      const char *a_name,
+      const std::shared_ptr<RE::TESCondition> &a_condition) = 0;
   virtual bool RefreshActor(RE::Actor *a_actor) = 0;
   virtual bool ApplyVariantOverride(RE::Actor *a_actor, const char *a_variant,
                                     bool a_keepExistingOverrides = false) = 0;

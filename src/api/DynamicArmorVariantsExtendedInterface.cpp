@@ -39,6 +39,18 @@ bool DynamicArmorVariantsExtendedInterface::SetVariantConditionsJson(
   return ConfigLoader::SetVariantConditionsJson(a_name, a_conditionsJson);
 }
 
+bool DynamicArmorVariantsExtendedInterface::SetCondition(
+    const char *a_name,
+    const std::shared_ptr<RE::TESCondition> &a_condition) {
+  if (!IsReady() || !a_name || !a_condition) {
+    return false;
+  }
+
+  DynamicArmorManager::GetSingleton()->SetCondition(std::string(a_name),
+                                                    a_condition);
+  return true;
+}
+
 bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
   if (!IsReady() || !a_actor) {
     return false;
