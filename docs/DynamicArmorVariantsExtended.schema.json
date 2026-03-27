@@ -22,6 +22,12 @@
             "description": "The name of a separately defined variant, which this variant will take precedence over for matching Armor Addons",
             "type": "string"
           },
+          "priority": {
+            "description": "Optional priority used when multiple condition-active variants compete. Higher values win. Variant overrides still always take precedence.",
+            "type": "integer",
+            "minimum": -1000000,
+            "maximum": 1000000
+          },
           "overrideHead": {
             "description": "Force the character's head and/or hair to be hidden or shown when replacing Armor Addons",
             "type": "string",

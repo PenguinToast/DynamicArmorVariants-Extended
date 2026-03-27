@@ -27,10 +27,18 @@ Variant replacement maps support two replacement identifier forms:
 
 This applies to values in both `replaceByForm` and `replaceBySlot`, and to arrays of those values.
 
+Variants may also define an optional integer `priority` in the range
+`-1000000` to `1000000`.
+
+- Higher `priority` wins when multiple condition-active variants compete.
+- Manually applied variant overrides still always take precedence over
+  condition-based resolution.
+
 Example:
 
 ```json
 {
+  "priority": 10,
   "replaceByForm": {
     "Skyrim.esm|0010D6A1": [
       "Dragonborn.esm|0001C655|Skyrim.esm|00027DE4",

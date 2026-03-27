@@ -67,7 +67,7 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name,
     variant.DisplayName = a_variant.DisplayName;
   }
 
-  if (a_variant.Priority.has_value()) {
+  if (a_variant.HasExplicitPriority) {
     variant.Priority = a_variant.Priority;
   }
 

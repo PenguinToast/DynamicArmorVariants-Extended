@@ -41,6 +41,13 @@ auto ConfigLoader::BuildRefMap(const Json::Value &a_refs)
   return refMap;
 }
 
+#include <algorithm>
+
+namespace {
+constexpr std::int32_t kMinVariantPriority = -1000000;
+constexpr std::int32_t kMaxVariantPriority = 1000000;
+}
+
 auto ConfigLoader::ParseOverrideOption(const Json::Value &a_overrideHead)
     -> ArmorVariant::OverrideOption {
   if (!a_overrideHead.isString()) {
@@ -74,9 +81,10 @@ auto ConfigLoader::BuildArmorVariant(const Json::Value &a_variantJson,
 
   a_variant.Linked = a_variantJson["linkTo"].asString();
   a_variant.DisplayName = a_variantJson["displayName"].asString();
-  if (a_variantJson["priority"].isInt()) {
-    a_variant.Priority = a_variantJson["priority"].asInt();
-  }
+  a_variant.Priority =
+      std::clamp(a_variantJson.get("priority", 0).asInt(),
+                 kMinVariantPriority, kMaxVariantPriority);
+  a_variant.HasExplicitPriority = a_variantJson["priority"].isInt();
   a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
 
   LoadFormMap(a_variantJson["replaceByForm"], a_variant.ReplaceByForm);

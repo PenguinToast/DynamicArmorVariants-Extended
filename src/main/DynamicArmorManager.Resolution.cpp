@@ -9,15 +9,8 @@
 #include <unordered_map>
 
 namespace {
-auto BuildConditionPriority(const ArmorVariant &a_variant) -> std::uint64_t {
-  constexpr auto kPriorityBias =
-      static_cast<std::int64_t>((std::numeric_limits<std::int32_t>::max)()) +
-      1;
-
-  return static_cast<std::uint64_t>(
-             static_cast<std::int64_t>(a_variant.Priority.value_or(0)) +
-             kPriorityBias) +
-         1;
+auto BuildConditionPriority(const ArmorVariant &a_variant) -> std::int64_t {
+  return static_cast<std::int64_t>(a_variant.Priority);
 }
 
 auto FilterAddonListForRace(const ArmorVariant::AddonList *a_addonList,
@@ -236,7 +229,7 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
   const ArmorVariant::AddonList *stateAddonList = nullptr;
   const ArmorVariant::AddonList *linkedAddonList = nullptr;
   std::string activeVariantState;
-  std::uint64_t activePriority = 0;
+  std::int64_t activePriority = (std::numeric_limits<std::int64_t>::min)();
 
   linkedAddonLists.clear();
 
@@ -253,23 +246,24 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
       }
     }
 
-    std::uint64_t candidatePriority = 0;
+    std::optional<std::int64_t> candidatePriority;
     if (const auto overrideIt = overridePriorityByName.find(name);
         overrideIt != overridePriorityByName.end()) {
-      candidatePriority = (1ull << 63) + overrideIt->second;
+      candidatePriority = (1ll << 62) +
+                          static_cast<std::int64_t>(overrideIt->second);
     } else if (IsVariantConditionLocked(a_actor, name)) {
       candidatePriority = BuildConditionPriority(variant);
     }
 
-    if (candidatePriority < activePriority) {
+    if (!candidatePriority.has_value()) {
       continue;
     }
 
-    if (candidatePriority == 0) {
+    if (*candidatePriority < activePriority) {
       continue;
     }
 
-    activePriority = candidatePriority;
+    activePriority = *candidatePriority;
     activeVariantState = name;
     activeVariant = std::addressof(variant);
     stateAddonList = addonList;
