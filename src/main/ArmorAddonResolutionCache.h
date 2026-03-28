@@ -30,6 +30,7 @@ public:
   auto Find(const Key &a_key) -> const Value *;
   void Insert(Key a_key, Value a_value);
   void Clear();
+  void ClearActor(RE::FormID a_actorFormID);
 
 private:
   struct KeyHash {

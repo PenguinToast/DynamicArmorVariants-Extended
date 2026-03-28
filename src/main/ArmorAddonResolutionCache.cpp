@@ -43,6 +43,18 @@ void ArmorAddonResolutionCache::Clear() {
   _lru.clear();
 }
 
+void ArmorAddonResolutionCache::ClearActor(const RE::FormID a_actorFormID) {
+  for (auto it = _entries.begin(); it != _entries.end();) {
+    if (it->first.ActorFormID != a_actorFormID) {
+      ++it;
+      continue;
+    }
+
+    _lru.erase(it->second.LruIt);
+    it = _entries.erase(it);
+  }
+}
+
 auto ArmorAddonResolutionCache::KeyHash::operator()(
     const Key &a_key) const noexcept -> std::size_t {
   const auto actorHash = std::hash<RE::FormID>{}(a_key.ActorFormID);

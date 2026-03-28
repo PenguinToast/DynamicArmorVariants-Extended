@@ -21,6 +21,8 @@ auto WornFormUpdater::ProcessEvent(
         *a_eventSource) -> RE::BSEventNotifyControl {
   auto actor = a_event->actor ? a_event->actor->As<RE::Actor>() : nullptr;
   if (actor && actor->Is3DLoaded()) {
+    DynamicArmorManager::GetSingleton()->ClearArmorAddonResolutionCache(
+        actor->GetFormID());
     Ext::Actor::Update3DSafe(actor);
   }
 
@@ -42,6 +44,8 @@ auto WornFormUpdater::ProcessEvent(
       return;
     }
 
+    DynamicArmorManager::GetSingleton()->ClearArmorAddonResolutionCache(
+        a_actor->GetFormID());
     Ext::Actor::Update3DSafe(a_actor);
   };
 
@@ -68,6 +72,8 @@ auto WornFormUpdater::ProcessEvent(
         *a_eventSource) -> RE::BSEventNotifyControl {
   auto target = a_event->target.get()->As<RE::Actor>();
   if (target && target->Is3DLoaded()) {
+    DynamicArmorManager::GetSingleton()->ClearArmorAddonResolutionCache(
+        target->GetFormID());
     Ext::Actor::Update3DSafe(target);
   }
 

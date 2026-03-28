@@ -248,6 +248,7 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
     }
   }
 
+  ClearArmorAddonResolutionCache(a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -299,6 +300,7 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
     }
   }
 
+  ClearArmorAddonResolutionCache(a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -330,6 +332,7 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
     _variantOverrides.erase(it);
   }
 
+  ClearArmorAddonResolutionCache(a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -347,6 +350,7 @@ void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
     _variantOverrides.erase(it);
   }
 
+  ClearArmorAddonResolutionCache(a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -354,6 +358,7 @@ void DynamicArmorManager::ResetAllVariants(RE::Actor *a_actor) {
   std::unique_lock lock(_stateMutex);
   ClearArmorAddonResolutionCache();
   _variantOverrides.erase(a_actor->GetFormID());
+  ClearArmorAddonResolutionCache(a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 

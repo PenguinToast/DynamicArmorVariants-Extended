@@ -56,6 +56,8 @@ bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
     return false;
   }
 
+  DynamicArmorManager::GetSingleton()->ClearArmorAddonResolutionCache(
+      a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
   return true;
 }

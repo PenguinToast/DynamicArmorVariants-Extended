@@ -287,3 +287,8 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
 void DynamicArmorManager::ClearArmorAddonResolutionCache() const {
   _armorAddonResolutionCache_.Clear();
 }
+
+void DynamicArmorManager::ClearArmorAddonResolutionCache(
+    const RE::FormID a_actorFormID) const {
+  _armorAddonResolutionCache_.ClearActor(a_actorFormID);
+}

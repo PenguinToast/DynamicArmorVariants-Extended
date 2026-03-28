@@ -57,6 +57,8 @@ public:
 
   void ResetAllVariants(RE::FormID a_formID);
 
+  void ClearArmorAddonResolutionCache(RE::FormID a_actorFormID) const;
+
   void Serialize(SKSE::SerializationInterface *a_skse);
 
   void Deserialize(SKSE::SerializationInterface *a_skse);
