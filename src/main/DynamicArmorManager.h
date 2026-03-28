@@ -87,6 +87,7 @@ private:
                                  RE::TESObjectARMA *a_armorAddon) const
       -> ArmorAddonResolutionCache::Value;
   void ClearArmorAddonResolutionCache() const;
+  void ClearArmorAddonResolutionCacheLocked(RE::FormID a_actorFormID) const;
   auto GetVariantsLocked(RE::TESObjectARMO *a_armor) const
       -> std::vector<std::string>;
   auto CollectAffectedWornArmorsLocked(RE::Actor *a_actor,

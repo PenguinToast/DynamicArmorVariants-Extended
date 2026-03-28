@@ -290,5 +290,11 @@ void DynamicArmorManager::ClearArmorAddonResolutionCache() const {
 
 void DynamicArmorManager::ClearArmorAddonResolutionCache(
     const RE::FormID a_actorFormID) const {
+  std::unique_lock lock(_stateMutex);
+  ClearArmorAddonResolutionCacheLocked(a_actorFormID);
+}
+
+void DynamicArmorManager::ClearArmorAddonResolutionCacheLocked(
+    const RE::FormID a_actorFormID) const {
   _armorAddonResolutionCache_.ClearActor(a_actorFormID);
 }
