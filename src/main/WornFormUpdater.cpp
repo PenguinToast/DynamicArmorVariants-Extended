@@ -31,9 +31,23 @@ auto WornFormUpdater::ProcessEvent(
     const RE::TESCombatEvent *a_event,
     [[maybe_unused]] RE::BSTEventSource<RE::TESCombatEvent> *a_eventSource)
     -> RE::BSEventNotifyControl {
-  auto actor = a_event->actor.get()->As<RE::Actor>();
-  if (actor && actor->Is3DLoaded()) {
-    Ext::Actor::Update3DSafe(actor);
+  auto actor = a_event && a_event->actor ? a_event->actor.get()->As<RE::Actor>()
+                                         : nullptr;
+  auto *target =
+      a_event && a_event->targetActor ? a_event->targetActor.get()->As<RE::Actor>()
+                                      : nullptr;
+
+  auto refreshActor = [](RE::Actor *a_actor) {
+    if (!a_actor || !a_actor->Is3DLoaded()) {
+      return;
+    }
+
+    Ext::Actor::Update3DSafe(a_actor);
+  };
+
+  refreshActor(actor);
+  if (target != actor) {
+    refreshActor(target);
   }
 
   return RE::BSEventNotifyControl::kContinue;
