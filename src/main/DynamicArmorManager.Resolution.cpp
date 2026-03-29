@@ -249,8 +249,8 @@ auto DynamicArmorManager::BuildArmorAddonResolution(
     std::optional<std::int64_t> candidatePriority;
     if (const auto overrideIt = overridePriorityByName.find(name);
         overrideIt != overridePriorityByName.end()) {
-      candidatePriority = (1ll << 62) +
-                          static_cast<std::int64_t>(overrideIt->second);
+      candidatePriority =
+          (1ll << 62) + static_cast<std::int64_t>(overrideIt->second);
     } else if (IsVariantConditionLocked(a_actor, name)) {
       candidatePriority = BuildConditionPriority(variant);
     }

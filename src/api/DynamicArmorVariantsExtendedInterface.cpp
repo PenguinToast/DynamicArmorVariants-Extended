@@ -40,8 +40,7 @@ bool DynamicArmorVariantsExtendedInterface::SetVariantConditionsJson(
 }
 
 bool DynamicArmorVariantsExtendedInterface::SetCondition(
-    const char *a_name,
-    const std::shared_ptr<RE::TESCondition> &a_condition) {
+    const char *a_name, const std::shared_ptr<RE::TESCondition> &a_condition) {
   if (!IsReady() || !a_name || !a_condition) {
     return false;
   }

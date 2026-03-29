@@ -46,7 +46,7 @@ auto ConfigLoader::BuildRefMap(const Json::Value &a_refs)
 namespace {
 constexpr std::int32_t kMinVariantPriority = -1000000;
 constexpr std::int32_t kMaxVariantPriority = 1000000;
-}
+} // namespace
 
 auto ConfigLoader::ParseOverrideOption(const Json::Value &a_overrideHead)
     -> ArmorVariant::OverrideOption {
@@ -81,9 +81,8 @@ auto ConfigLoader::BuildArmorVariant(const Json::Value &a_variantJson,
 
   a_variant.Linked = a_variantJson["linkTo"].asString();
   a_variant.DisplayName = a_variantJson["displayName"].asString();
-  a_variant.Priority =
-      std::clamp(a_variantJson.get("priority", 0).asInt(),
-                 kMinVariantPriority, kMaxVariantPriority);
+  a_variant.Priority = std::clamp(a_variantJson.get("priority", 0).asInt(),
+                                  kMinVariantPriority, kMaxVariantPriority);
   a_variant.HasExplicitPriority = a_variantJson["priority"].isInt();
   a_variant.OverrideHead = ParseOverrideOption(a_variantJson["overrideHead"]);
 

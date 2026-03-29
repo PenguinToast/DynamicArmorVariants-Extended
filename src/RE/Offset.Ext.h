@@ -30,8 +30,7 @@ namespace TESObjectARMA {
 // SkyrimSE 1.6.353: 0x235A00
 inline constexpr auto HasRace = MAKE_OFFSET(17359, 17757, 0x2380A0);
 // SkyrimSE 1.6.353: 0x235D10
-inline constexpr auto InitWornArmorAddon =
-    MAKE_OFFSET(17361, 17759, 0x2383A0);
+inline constexpr auto InitWornArmorAddon = MAKE_OFFSET(17361, 17759, 0x2383A0);
 } // namespace TESObjectARMA
 } // namespace Offset
 } // namespace RE

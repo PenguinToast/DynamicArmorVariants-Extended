@@ -35,9 +35,9 @@ auto WornFormUpdater::ProcessEvent(
     -> RE::BSEventNotifyControl {
   auto actor = a_event && a_event->actor ? a_event->actor.get()->As<RE::Actor>()
                                          : nullptr;
-  auto *target =
-      a_event && a_event->targetActor ? a_event->targetActor.get()->As<RE::Actor>()
-                                      : nullptr;
+  auto *target = a_event && a_event->targetActor
+                     ? a_event->targetActor.get()->As<RE::Actor>()
+                     : nullptr;
 
   auto refreshActor = [](RE::Actor *a_actor) {
     if (!a_actor || !a_actor->Is3DLoaded()) {
