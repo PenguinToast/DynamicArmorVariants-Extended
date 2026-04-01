@@ -86,7 +86,6 @@ void Patches::WriteFixEquipConflictPatch(FixEquipConflictCheckFunc *a_func) {
       mov(rcx, ptr[rsp + a_itemStackOffset]);
       mov(edx, ebx);
       mov(r8, rdi);
-      mov(r9, ptr[rsp + 0x40]);
       call(ptr[rip + func]);
 
       L(exit);

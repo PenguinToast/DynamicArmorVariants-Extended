@@ -116,8 +116,7 @@ auto Hooks::GetWornMask(RE::InventoryChanges *a_inventoryChanges)
 
 bool Hooks::FixEquipConflictCheck(std::uintptr_t a_itemAddr,
                                   std::uint32_t a_bodySlot,
-                                  RE::Actor *a_actor,
-                                  std::uintptr_t) {
+                                  RE::Actor *a_actor) {
   auto *item = reinterpret_cast<RE::TESForm *>(a_itemAddr);
   auto *armor = item ? item->As<RE::TESObjectARMO>() : nullptr;
   if (!armor || !a_actor) {

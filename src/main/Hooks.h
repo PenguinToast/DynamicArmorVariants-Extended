@@ -15,6 +15,5 @@ private:
 
   static bool FixEquipConflictCheck(std::uintptr_t a_itemAddr,
                                     std::uint32_t a_bodySlot,
-                                    RE::Actor *a_actor,
-                                    std::uintptr_t a_originalComponentAddr);
+                                    RE::Actor *a_actor);
 };
