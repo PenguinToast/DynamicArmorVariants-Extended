@@ -73,6 +73,7 @@ mkdir -p \
     "${STAGE_DIR}/Data/Scripts" \
     "${STAGE_DIR}/Data/Source/Scripts" \
     "${STAGE_DIR}/Data/SKSE/Plugins" \
+    "${STAGE_DIR}/Data/SKSE/Plugins/DynamicArmorVariants" \
     "${STAGE_DIR}/UIExtensions_Menu/Interface/Translations" \
     "${STAGE_DIR}/UIExtensions_Menu/MCM/Config/DynamicArmorMenu" \
     "${STAGE_DIR}/UIExtensions_Menu/Scripts" \
@@ -87,6 +88,8 @@ cp "${PLUGIN_SRC}" "${STAGE_DIR}/Data/SKSE/Plugins/${PLUGIN_NAME}.dll"
 if [[ -f "${PDB_SRC}" ]]; then
     cp "${PDB_SRC}" "${STAGE_DIR}/Data/SKSE/Plugins/${PLUGIN_NAME}.pdb"
 fi
+cp "${REPO_ROOT}/data/SKSE/Plugins/DynamicArmorVariants/settings.json" \
+    "${STAGE_DIR}/Data/SKSE/Plugins/DynamicArmorVariants/"
 
 cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor.pex" "${STAGE_DIR}/Data/Scripts/"
 cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor.psc" "${STAGE_DIR}/Data/Source/Scripts/"
