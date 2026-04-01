@@ -43,6 +43,10 @@ inline auto MakeHook(REL::ID a_id, std::ptrdiff_t a_offset = 0) {
   return REL::Relocation<std::uintptr_t>(a_id, a_offset);
 }
 
+inline auto MakeHook(REL::RelocationID a_id, std::ptrdiff_t a_offset = 0) {
+  return REL::Relocation<std::uintptr_t>(a_id, a_offset);
+}
+
 inline auto MakeHook(REL::VariantID a_id, std::ptrdiff_t a_offset = 0) {
   return REL::Relocation<std::uintptr_t>(a_id.address() + a_offset);
 }
@@ -59,6 +63,8 @@ inline auto MakeHook(REL::VariantOffset a_address,
 
 #define MAKE_OFFSET(a_idSE, a_idAE, a_offsetVR)                                \
   REL::VariantID((a_idSE), (a_idAE), (a_offsetVR))
+
+#define MAKE_RELOCATION(a_idSE, a_idAE) REL::RelocationID((a_idSE), (a_idAE))
 
 #define DLLEXPORT __declspec(dllexport)
 
