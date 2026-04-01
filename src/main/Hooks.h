@@ -4,7 +4,7 @@ class Hooks {
 public:
   Hooks() = delete;
 
-  static void Install();
+  static void Install(bool a_installEquipConflictHook);
 
 private:
   static void InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,

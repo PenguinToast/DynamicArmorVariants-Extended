@@ -71,10 +71,15 @@ public:
 
 } // namespace
 
-void Hooks::Install() {
+void Hooks::Install(const bool a_installEquipConflictHook) {
   Patches::WriteInitWornPatch(&InitWornArmor);
   Patches::WriteGetWornMaskPatch(&GetWornMask);
-  Patches::WriteFixEquipConflictPatch(&FixEquipConflictCheck);
+  if (a_installEquipConflictHook) {
+    logger::info("Installing equip conflict hook"sv);
+    Patches::WriteFixEquipConflictPatch(&FixEquipConflictCheck);
+  } else {
+    logger::info("Equip conflict hook disabled by settings"sv);
+  }
 }
 
 void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
