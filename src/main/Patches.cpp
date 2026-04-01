@@ -6,6 +6,8 @@ constexpr std::uint8_t kSEFixEquipConflictItemStackOffset = 0x80;
 constexpr std::uint8_t kAEFixEquipConflictItemStackOffset = 0x88;
 
 auto GetFixEquipConflictItemStackOffset() -> std::uint8_t {
+  // Skyrim VR 1.4.15 matches the pre-AE/SE layout here and uses the same
+  // owning-armor stack slot as SE.
   return REL::Module::IsAE() ? kAEFixEquipConflictItemStackOffset
                              : kSEFixEquipConflictItemStackOffset;
 }

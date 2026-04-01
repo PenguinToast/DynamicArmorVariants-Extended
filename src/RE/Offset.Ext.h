@@ -6,7 +6,9 @@ namespace Actor {
 // SkyrimSE 1.6.353: 0x2A69D0
 inline constexpr auto Update3D = MAKE_OFFSET(19316, 19743, 0x2A5AC0);
 // SkyrimSE 1.6.353: 0x635740
-inline constexpr auto FixEquipConflictCheck = MAKE_OFFSET(36979, 38004, 0x644410);
+// SkyrimVR uses the pre-AE function family for this hook; 0x1406155F0 is the
+// VR address mapped from SSE ID 36979 in skyrim_vr_address_library/addrlib.csv.
+inline constexpr auto FixEquipConflictCheck = MAKE_OFFSET(36979, 38004, 0x6155F0);
 } // namespace Actor
 
 namespace InventoryChanges {
