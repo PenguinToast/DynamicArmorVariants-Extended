@@ -73,7 +73,7 @@ auto BuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor)
 void VisitResolvedArmorAddons(
     DynamicArmorManagerState &a_state, RE::TESObjectARMO *a_defaultArmor,
     RE::TESObjectARMA *a_sourceArmorAddon,
-    const ArmorSlotContributionMap &a_sourceContributionMap,
+    const ArmorSlotContributionMap *a_sourceContributionMap,
     const ArmorAddonResolutionCache::Value &a_resolution,
     const DynamicArmorResolvedAddonVisitor &a_visit);
 auto FindOwnershipMaskForAddon(const ArmorSlotContributionMap &a_map,
