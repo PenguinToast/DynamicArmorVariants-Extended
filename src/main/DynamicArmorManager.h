@@ -4,6 +4,7 @@
 #include "ArmorVariant.h"
 
 #include <chrono>
+#include <optional>
 #include <shared_mutex>
 #include <unordered_set>
 #include <vector>
@@ -28,8 +29,19 @@ public:
   void VisitArmorAddons(
       RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
       RE::TESObjectARMA *a_armorAddon,
-      const std::function<void(RE::TESObjectARMO *, RE::TESObjectARMA *)>
+      // Callback params:
+      // 1. visited armor for this resolved branch
+      // 2. visited addon for this resolved branch
+      // 3. effective branch mask used by worn-mask aggregation
+      // 4. optional narrower owning-armor mask override used during
+      //    InitWornArmorAddon body-part tests; nullopt means vanilla owning
+      //    armor mask is already correct for this branch
+      const std::function<void(RE::TESObjectARMO *, RE::TESObjectARMA *,
+                               BipedObjectSlot,
+                               std::optional<BipedObjectSlot>)>
           &a_visit) const;
+  auto ShouldUseCustomInitWornArmor(RE::Actor *a_actor,
+                                    RE::TESObjectARMO *a_armor) const -> bool;
 
   auto GetBipedObjectSlots(RE::Actor *a_actor, RE::TESObjectARMO *a_armor) const
       -> BipedObjectSlot;
@@ -66,6 +78,16 @@ public:
   void Revert();
 
 private:
+  struct ArmorSlotContribution {
+    RE::TESObjectARMA *ArmorAddon{nullptr};
+    BipedObjectSlot OwnershipMask{BipedObjectSlot::kNone};
+  };
+
+  struct ArmorSlotContributionMap {
+    BipedObjectSlot ArmorMask{BipedObjectSlot::kNone};
+    std::vector<ArmorSlotContribution> Sources;
+  };
+
   static constexpr std::uint32_t SerializationVersion = 1;
   static constexpr std::uint32_t SerializationType = 'AAVO';
   static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
@@ -83,9 +105,27 @@ private:
   auto GetOrBuildArmorAddonResolution(RE::Actor *a_actor,
                                       RE::TESObjectARMA *a_armorAddon) const
       -> ArmorAddonResolutionCache::Value;
+  auto GetOrBuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor) const
+      -> const ArmorSlotContributionMap &;
+  auto BuildResolvedCoverageMask(RE::Actor *a_actor, RE::TESObjectARMO *a_armor,
+                                 bool *a_hasActiveVariant = nullptr,
+                                 ArmorVariant::OverrideOption *a_overrideOption =
+                                     nullptr) const -> BipedObjectSlot;
   auto BuildArmorAddonResolution(RE::Actor *a_actor,
                                  RE::TESObjectARMA *a_armorAddon) const
       -> ArmorAddonResolutionCache::Value;
+  auto BuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor) const
+      -> ArmorSlotContributionMap;
+  void VisitResolvedArmorAddonsLocked(
+      RE::TESObjectARMO *a_defaultArmor, RE::TESObjectARMA *a_sourceArmorAddon,
+      const ArmorSlotContributionMap &a_sourceContributionMap,
+      const ArmorAddonResolutionCache::Value &a_resolution,
+      const std::function<void(RE::TESObjectARMO *, RE::TESObjectARMA *,
+                               BipedObjectSlot,
+                               std::optional<BipedObjectSlot>)> &a_visit) const;
+  static auto FindOwnershipMaskForAddon(const ArmorSlotContributionMap &a_map,
+                                        const RE::TESObjectARMA *a_armorAddon)
+      -> BipedObjectSlot;
   void ClearArmorAddonResolutionCache() const;
   void ClearArmorAddonResolutionCacheLocked(RE::FormID a_actorFormID) const;
   auto GetVariantsLocked(RE::TESObjectARMO *a_armor) const
@@ -109,5 +149,7 @@ private:
   std::uint64_t _nextOverrideSequence{1};
   mutable ArmorAddonResolutionCache _armorAddonResolutionCache_{
       ArmorAddonResolutionCacheCapacity, ArmorAddonResolutionCacheTtl};
+  mutable std::unordered_map<RE::FormID, ArmorSlotContributionMap>
+      _armorSlotContributionCache_;
   mutable std::shared_mutex _stateMutex;
 };

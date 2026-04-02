@@ -1,10 +1,12 @@
 #include "Hooks.h"
 #include "DynamicArmorManager.h"
+#include "Ext/Actor.h"
 #include "Ext/InventoryChanges.h"
 #include "Ext/TESObjectARMA.h"
 #include "GetWornMaskVisitor.h"
 #include "Patches.h"
 
+#include <optional>
 #include <unordered_set>
 #include <vector>
 
@@ -38,6 +40,34 @@ auto GetWornExtraData(RE::InventoryEntryData *a_entryData)
 
   return nullptr;
 }
+
+struct BodyPartTestOverride {
+  RE::BGSBipedObjectForm *TargetForm{nullptr};
+  BipedObjectSlot OverrideMask{BipedObjectSlot::kNone};
+};
+
+thread_local std::optional<BodyPartTestOverride> g_bodyPartTestOverride;
+
+class ScopedBodyPartTestOverride {
+public:
+  ScopedBodyPartTestOverride(RE::BGSBipedObjectForm *a_targetForm,
+                             const BipedObjectSlot a_overrideMask)
+      : previous_(g_bodyPartTestOverride) {
+    if (!a_targetForm) {
+      return;
+    }
+
+    g_bodyPartTestOverride = BodyPartTestOverride{
+        .TargetForm = a_targetForm,
+        .OverrideMask = a_overrideMask,
+    };
+  }
+
+  ~ScopedBodyPartTestOverride() { g_bodyPartTestOverride = previous_; }
+
+private:
+  std::optional<BodyPartTestOverride> previous_;
+};
 
 struct PendingUnequip {
   RE::TESObjectARMO *armor{nullptr};
@@ -74,6 +104,7 @@ public:
 void Hooks::Install(const bool a_installEquipConflictHook) {
   Patches::WriteInitWornPatch(&InitWornArmor);
   Patches::WriteGetWornMaskPatch(&GetWornMask);
+  Patches::WriteTestBodyPartByIndexPatch(&TestBodyPartByIndex);
   if (a_installEquipConflictHook) {
     logger::info("Installing equip conflict hook"sv);
     Patches::WriteFixEquipConflictPatch(&FixEquipConflictCheck);
@@ -84,6 +115,9 @@ void Hooks::Install(const bool a_installEquipConflictHook) {
 
 void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
                           RE::BSTSmartPointer<RE::BipedAnim> *a_biped) {
+  const auto useMaskOverrides =
+      DynamicArmorManager::GetSingleton()->ShouldUseCustomInitWornArmor(a_actor,
+                                                                        a_armor);
   auto race = a_actor->GetRace();
   auto sex = a_actor->GetActorBase()->GetSex();
   std::unordered_set<RE::TESObjectARMA *> initializedAddons;
@@ -92,15 +126,26 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
   for (auto &armorAddon : a_armor->armorAddons) {
     if (Ext::TESObjectARMA::HasRace(armorAddon, race)) {
 
-      auto visitor = [&initializedAddons, a_biped,
-                      sex](auto *visitedArmor, auto *visitedArmorAddon) {
+      auto visitor = [&initializedAddons, a_biped, sex, useMaskOverrides](
+                         auto *visitedArmor, auto *visitedArmorAddon,
+                         const BipedObjectSlot,
+                         const std::optional<BipedObjectSlot> a_overrideMask) {
         if (!visitedArmorAddon ||
             !initializedAddons.insert(visitedArmorAddon).second) {
           return;
         }
 
-        return Ext::TESObjectARMA::InitWornArmorAddon(
-            visitedArmorAddon, visitedArmor, a_biped, sex);
+        if (useMaskOverrides && a_overrideMask.has_value()) {
+          ScopedBodyPartTestOverride maskOverride{
+              static_cast<RE::BGSBipedObjectForm *>(visitedArmor),
+              *a_overrideMask};
+          return Ext::TESObjectARMA::InitWornArmorAddon(
+              visitedArmorAddon, visitedArmor, a_biped, sex);
+        }
+
+        return Ext::TESObjectARMA::InitWornArmorAddon(visitedArmorAddon,
+                                                      visitedArmor, a_biped,
+                                                      sex);
       };
 
       DynamicArmorManager::GetSingleton()->VisitArmorAddons(
@@ -117,6 +162,21 @@ auto Hooks::GetWornMask(RE::InventoryChanges *a_inventoryChanges)
   GetWornMaskVisitor visitor{actor};
   Ext::InventoryChanges::Accept(a_inventoryChanges, std::addressof(visitor));
   return visitor.slotMask.get();
+}
+
+bool Hooks::TestBodyPartByIndex(RE::BGSBipedObjectForm *a_form,
+                                std::uint32_t a_bodyPart) {
+  if (!a_form || a_bodyPart >= 32) {
+    return false;
+  }
+
+  auto slotMask = a_form->bipedModelData.bipedObjectSlots.get();
+  if (g_bodyPartTestOverride.has_value() &&
+      g_bodyPartTestOverride->TargetForm == a_form) {
+    slotMask = g_bodyPartTestOverride->OverrideMask;
+  }
+
+  return (std::to_underlying(slotMask) & (1u << a_bodyPart)) != 0;
 }
 
 bool Hooks::FixEquipConflictCheck(std::uintptr_t a_itemAddr,

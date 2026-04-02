@@ -11,6 +11,11 @@ using GetWornMaskFunc = auto(RE::InventoryChanges *a_inventoryChanges)
 
 void WriteGetWornMaskPatch(GetWornMaskFunc *a_func);
 
+using TestBodyPartByIndexFunc =
+    bool(RE::BGSBipedObjectForm *a_form, std::uint32_t a_bodyPart);
+
+void WriteTestBodyPartByIndexPatch(TestBodyPartByIndexFunc *a_func);
+
 using FixEquipConflictCheckFunc = bool(std::uintptr_t a_itemAddr,
                                        std::uint32_t a_bodySlot,
                                        RE::Actor *a_actor);

@@ -13,6 +13,9 @@ private:
   static auto GetWornMask(RE::InventoryChanges *a_inventoryChanges)
       -> BipedObjectSlot;
 
+  static bool TestBodyPartByIndex(RE::BGSBipedObjectForm *a_form,
+                                  std::uint32_t a_bodyPart);
+
   static bool FixEquipConflictCheck(std::uintptr_t a_itemAddr,
                                     std::uint32_t a_bodySlot,
                                     RE::Actor *a_actor);

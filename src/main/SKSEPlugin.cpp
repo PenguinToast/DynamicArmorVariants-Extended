@@ -34,6 +34,7 @@ void InitializeLog() {
   spdlog::set_default_logger(std::move(log));
   spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
 }
+
 } // namespace
 
 extern "C" DLLEXPORT bool SKSEAPI

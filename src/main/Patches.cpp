@@ -60,6 +60,27 @@ void Patches::WriteGetWornMaskPatch(GetWornMaskFunc *a_func) {
   REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
 }
 
+void Patches::WriteTestBodyPartByIndexPatch(TestBodyPartByIndexFunc *a_func) {
+  auto hook = util::MakeHook(RE::Offset::BGSBipedObjectForm::TestBodyPartByIndex);
+
+  struct Patch : public Xbyak::CodeGenerator {
+    Patch(std::uintptr_t a_funcAddr) {
+      mov(rax, a_funcAddr);
+      jmp(rax);
+    }
+  };
+
+  Patch patch{reinterpret_cast<std::uintptr_t>(a_func)};
+  patch.ready();
+
+  if (patch.getSize() > 0x12) {
+    util::report_and_fail("Patch was too large, failed to install"sv);
+  }
+
+  REL::safe_fill(hook.address(), REL::INT3, 0x12);
+  REL::safe_write(hook.address(), patch.getCode(), patch.getSize());
+}
+
 void Patches::WriteFixEquipConflictPatch(FixEquipConflictCheckFunc *a_func) {
   auto &trampoline = SKSE::GetTrampoline();
   auto hook = util::MakeHook(RE::Offset::Actor::FixEquipConflictCheck, 0x97);
