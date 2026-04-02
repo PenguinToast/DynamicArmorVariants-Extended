@@ -1,4 +1,5 @@
 #include "Actor.h"
+#include "DynamicArmorManager.h"
 #include "RE/Offset.Ext.h"
 
 namespace Ext {
@@ -12,7 +13,12 @@ void Actor::Update3DSafe(RE::Actor *a_actor) {
   auto handle = a_actor->GetHandle();
   SKSE::GetTaskInterface()->AddTask([handle] {
     if (auto actor = handle.get(); actor && actor->Is3DLoaded()) {
-      Update3D(actor.get());
+      const auto resolutionStats =
+          DynamicArmorManager::GetSingleton()->ResolveEquippedArmorVariants(
+              actor.get());
+      if (resolutionStats.Changed) {
+        Update3D(actor.get());
+      }
     }
   });
 }

@@ -48,7 +48,6 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
                                        bool a_keepExistingOverrides) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
 
   auto it = state.variants.find(a_variant);
   if (it == state.variants.end()) {
@@ -99,9 +98,6 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
       }
     }
   }
-
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
-                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -111,7 +107,6 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
                                        bool a_keepExistingOverrides) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
 
   auto it = state.variants.find(a_variant);
   if (it == state.variants.end()) {
@@ -154,9 +149,6 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
       }
     }
   }
-
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
-                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -164,7 +156,6 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
                                        const RE::TESObjectARMO *a_armor) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
   auto it = state.variantOverrides.find(a_actor->GetFormID());
   if (it == state.variantOverrides.end()) {
     return;
@@ -188,9 +179,6 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
   if (overrides.empty()) {
     state.variantOverrides.erase(it);
   }
-
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
-                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -198,7 +186,6 @@ void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
                                                 const std::string &a_variant) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
   auto it = state.variantOverrides.find(a_actor->GetFormID());
   if (it == state.variantOverrides.end()) {
     return;
@@ -208,25 +195,18 @@ void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
   if (it->second.empty()) {
     state.variantOverrides.erase(it);
   }
-
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
-                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
 void DynamicArmorManager::ResetAllVariants(RE::Actor *a_actor) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
   state.variantOverrides.erase(a_actor->GetFormID());
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
-                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
 void DynamicArmorManager::ResetAllVariants(RE::FormID a_formID) {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
-  dave::detail::ClearArmorAddonResolutionCache(state);
   state.variantOverrides.erase(a_formID);
 }

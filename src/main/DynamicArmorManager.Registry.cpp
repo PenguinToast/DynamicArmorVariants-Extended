@@ -1,6 +1,24 @@
 #include "DynamicArmorManager.h"
 #include "DynamicArmorManager.Internal.h"
 
+namespace dave::detail {
+void RebuildLinkedVariantsIndexLocked(DynamicArmorManagerState &a_state) {
+  a_state.linkedVariantsByTarget.clear();
+
+  for (auto &[name, variant] : a_state.variants) {
+    if (variant.Linked.empty()) {
+      continue;
+    }
+
+    a_state.linkedVariantsByTarget[variant.Linked].push_back(
+        std::addressof(variant));
+  }
+
+  a_state.variantCandidatesLru.clear();
+  a_state.variantCandidatesByArmorAddon.clear();
+}
+} // namespace dave::detail
+
 auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager * {
   static DynamicArmorManager singleton{};
   return std::addressof(singleton);
@@ -20,6 +38,7 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name,
       state.variants.try_emplace(std::string(a_name), std::move(a_variant));
 
   if (inserted) {
+    dave::detail::RebuildLinkedVariantsIndexLocked(state);
     return;
   }
 
@@ -49,6 +68,8 @@ void DynamicArmorManager::RegisterArmorVariant(std::string_view a_name,
   for (auto &[slot, replacement] : a_variant.ReplaceBySlot) {
     variant.ReplaceBySlot[slot] = replacement;
   }
+
+  dave::detail::RebuildLinkedVariantsIndexLocked(state);
 }
 
 void DynamicArmorManager::ReplaceArmorVariant(std::string_view a_name,
@@ -57,6 +78,7 @@ void DynamicArmorManager::ReplaceArmorVariant(std::string_view a_name,
   std::unique_lock lock(state.mutex);
   dave::detail::ClearArmorAddonResolutionCache(state);
   state.variants.insert_or_assign(std::string(a_name), std::move(a_variant));
+  dave::detail::RebuildLinkedVariantsIndexLocked(state);
 }
 
 auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool {
@@ -76,6 +98,7 @@ auto DynamicArmorManager::DeleteArmorVariant(std::string_view a_name) -> bool {
     }
   }
 
+  dave::detail::RebuildLinkedVariantsIndexLocked(state);
   return erased;
 }
 

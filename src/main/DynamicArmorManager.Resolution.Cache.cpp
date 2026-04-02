@@ -5,7 +5,6 @@
 #include "Ext/TESObjectARMA.h"
 
 #include <limits>
-#include <unordered_map>
 
 namespace {
 auto BuildConditionPriority(const ArmorVariant &a_variant) -> std::int64_t {
@@ -43,16 +42,36 @@ auto dave::detail::IsUsingVariantLocked(const DynamicArmorManagerState &a_state,
 
 auto dave::detail::IsVariantOverrideLocked(
     const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
-    std::string_view a_stateName) -> bool {
+    const std::string &a_stateName) -> bool {
   if (!a_actor) {
     return false;
   }
 
-  const auto stateName = std::string(a_stateName);
-
   if (auto it = a_state.variantOverrides.find(a_actor->GetFormID());
       it != a_state.variantOverrides.end()) {
-    return it->second.contains(stateName);
+    return it->second.contains(a_stateName);
+  }
+
+  return false;
+}
+
+auto dave::detail::IsVariantOverrideLocked(
+    const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    std::string_view a_stateName) -> bool {
+  return IsVariantOverrideLocked(a_state, a_actor, std::string(a_stateName));
+}
+
+auto dave::detail::IsVariantConditionLocked(
+    const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    const std::string &a_stateName) -> bool {
+  if (!a_actor) {
+    return false;
+  }
+
+  if (auto it = a_state.conditions.find(a_stateName);
+      it != a_state.conditions.end()) {
+    auto &condition = it->second;
+    return condition ? condition->IsTrue(a_actor, a_actor) : false;
   }
 
   return false;
@@ -61,18 +80,7 @@ auto dave::detail::IsVariantOverrideLocked(
 auto dave::detail::IsVariantConditionLocked(
     const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
     std::string_view a_stateName) -> bool {
-  if (!a_actor) {
-    return false;
-  }
-
-  const auto stateName = std::string(a_stateName);
-  if (auto it = a_state.conditions.find(stateName);
-      it != a_state.conditions.end()) {
-    auto &condition = it->second;
-    return condition ? condition->IsTrue(a_actor, a_actor) : false;
-  }
-
-  return false;
+  return IsVariantConditionLocked(a_state, a_actor, std::string(a_stateName));
 }
 
 auto dave::detail::GetOrBuildArmorAddonResolution(
@@ -82,13 +90,13 @@ auto dave::detail::GetOrBuildArmorAddonResolution(
       .ActorFormID = a_actor ? a_actor->GetFormID() : 0,
       .ArmorAddonFormID = a_armorAddon ? a_armorAddon->GetFormID() : 0};
 
-  if (const auto *resolution = a_state.armorAddonResolutionCache.Find(key)) {
-    return *resolution;
+  if (const auto resolution = a_state.armorAddonResolutionCache.Find(key)) {
+    return resolution->get();
   }
 
   a_state.armorAddonResolutionCache.Insert(
       key, BuildArmorAddonResolution(a_state, a_actor, a_armorAddon));
-  return *a_state.armorAddonResolutionCache.Find(key);
+  return a_state.armorAddonResolutionCache.Find(key)->get();
 }
 
 auto dave::detail::GetOrBuildArmorSlotContributionMap(
@@ -110,6 +118,50 @@ auto dave::detail::GetOrBuildArmorSlotContributionMap(
       .first->second;
 }
 
+auto dave::detail::GetOrBuildVariantCandidatesForAddon(
+    const DynamicArmorManagerState &a_state, RE::TESObjectARMA *a_armorAddon)
+    -> const std::vector<VariantCandidateRef> & {
+  static const std::vector<VariantCandidateRef> kEmptyCandidates{};
+  if (!a_armorAddon) {
+    return kEmptyCandidates;
+  }
+
+  const auto formID = a_armorAddon->GetFormID();
+  if (const auto it = a_state.variantCandidatesByArmorAddon.find(formID);
+      it != a_state.variantCandidatesByArmorAddon.end()) {
+    a_state.variantCandidatesLru.erase(it->second.LruIt);
+    a_state.variantCandidatesLru.push_front(formID);
+    it->second.LruIt = a_state.variantCandidatesLru.begin();
+    return it->second.Candidates;
+  }
+
+  auto candidates = std::vector<VariantCandidateRef>{};
+  candidates.reserve(a_state.variants.size());
+  for (auto &[name, variant] : a_state.variants) {
+    if (const auto *addonList = variant.GetAddonList(a_armorAddon); addonList) {
+      candidates.push_back(VariantCandidateRef{
+          .Name = std::addressof(name),
+          .Variant = std::addressof(variant),
+          .AddonList = addonList});
+    }
+  }
+
+  a_state.variantCandidatesLru.push_front(formID);
+  auto [it, _] = a_state.variantCandidatesByArmorAddon.emplace(
+      formID, VariantCandidateCacheEntry{.Candidates = std::move(candidates),
+                                         .LruIt =
+                                             a_state.variantCandidatesLru.begin()});
+
+  if (a_state.variantCandidatesByArmorAddon.size() >
+      DynamicArmorManagerState::ArmorAddonResolutionCacheCapacity) {
+    const auto lruFormID = a_state.variantCandidatesLru.back();
+    a_state.variantCandidatesByArmorAddon.erase(lruFormID);
+    a_state.variantCandidatesLru.pop_back();
+  }
+
+  return it->second.Candidates;
+}
+
 auto dave::detail::BuildArmorAddonResolution(
     const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
     RE::TESObjectARMA *a_armorAddon) -> ArmorAddonResolutionCache::Value {
@@ -118,43 +170,49 @@ auto dave::detail::BuildArmorAddonResolution(
     return resolution;
   }
 
-  std::unordered_map<std::string_view, const ArmorVariant::AddonList *>
-      linkedAddonLists;
-  std::unordered_map<std::string, std::uint64_t> overridePriorityByName;
+  const std::unordered_map<std::string, std::uint64_t> *overridePriorityByName =
+      nullptr;
   if (const auto overrideIt =
           a_state.variantOverrides.find(a_actor->GetFormID());
       overrideIt != a_state.variantOverrides.end()) {
-    overridePriorityByName = overrideIt->second;
+    overridePriorityByName = std::addressof(overrideIt->second);
   }
 
   const ArmorVariant *activeVariant = nullptr;
   const ArmorVariant::AddonList *stateAddonList = nullptr;
   const ArmorVariant::AddonList *linkedAddonList = nullptr;
-  std::string activeVariantState;
+  std::string_view activeVariantState;
   std::int64_t activePriority = (std::numeric_limits<std::int64_t>::min)();
+  const auto &candidateVariants =
+      GetOrBuildVariantCandidatesForAddon(a_state, a_armorAddon);
 
-  linkedAddonLists.clear();
-
-  for (auto &[name, variant] : a_state.variants) {
-    const auto *addonList = variant.GetAddonList(a_armorAddon);
-    if (!addonList) {
+  for (const auto &candidate : candidateVariants) {
+    const auto *variant = candidate.Variant;
+    if (!variant) {
       continue;
     }
-
-    if (!variant.Linked.empty()) {
-      linkedAddonLists.insert_or_assign(variant.Linked, addonList);
-      if (variant.Linked == activeVariantState) {
-        linkedAddonList = addonList;
-      }
+    if (!candidate.Name) {
+      continue;
     }
+    if (!candidate.AddonList) {
+      continue;
+    }
+    const auto &name = *candidate.Name;
+
+    const auto *addonList = candidate.AddonList;
 
     std::optional<std::int64_t> candidatePriority;
-    if (const auto overrideIt = overridePriorityByName.find(name);
-        overrideIt != overridePriorityByName.end()) {
-      candidatePriority =
-          (1ll << 62) + static_cast<std::int64_t>(overrideIt->second);
-    } else if (IsVariantConditionLocked(a_state, a_actor, name)) {
-      candidatePriority = BuildConditionPriority(variant);
+    if (overridePriorityByName) {
+      if (const auto overrideIt = overridePriorityByName->find(name);
+          overrideIt != overridePriorityByName->end()) {
+        candidatePriority =
+            (1ll << 62) + static_cast<std::int64_t>(overrideIt->second);
+      }
+    }
+    if (!candidatePriority.has_value()) {
+      if (IsVariantConditionLocked(a_state, a_actor, name)) {
+        candidatePriority = BuildConditionPriority(*variant);
+      }
     }
 
     if (!candidatePriority.has_value()) {
@@ -167,17 +225,26 @@ auto dave::detail::BuildArmorAddonResolution(
 
     activePriority = *candidatePriority;
     activeVariantState = name;
-    activeVariant = std::addressof(variant);
+    activeVariant = variant;
     stateAddonList = addonList;
-    if (const auto it = linkedAddonLists.find(activeVariantState);
-        it != linkedAddonLists.end()) {
-      linkedAddonList = it->second;
-    } else {
-      linkedAddonList = nullptr;
-    }
   }
 
   if (activeVariant) {
+    if (const auto linkedVariantsIt =
+            a_state.linkedVariantsByTarget.find(activeVariantState);
+        linkedVariantsIt != a_state.linkedVariantsByTarget.end()) {
+      for (const auto *linkedVariant : linkedVariantsIt->second) {
+        if (!linkedVariant) {
+          continue;
+        }
+
+        if (const auto *addonList = linkedVariant->GetAddonList(a_armorAddon);
+            addonList != nullptr) {
+          linkedAddonList = addonList;
+        }
+      }
+    }
+
     resolution.ActiveVariant = activeVariant;
     resolution.ResolvedAddonList = FilterAddonListForRace(
         linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
@@ -189,6 +256,8 @@ auto dave::detail::BuildArmorAddonResolution(
 void dave::detail::ClearArmorAddonResolutionCache(
     DynamicArmorManagerState &a_state) {
   a_state.armorAddonResolutionCache.Clear();
+  a_state.variantCandidatesByArmorAddon.clear();
+  a_state.variantCandidatesLru.clear();
 }
 
 void DynamicArmorManager::ClearArmorAddonResolutionCache(

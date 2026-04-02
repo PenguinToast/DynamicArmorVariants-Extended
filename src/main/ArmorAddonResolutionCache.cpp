@@ -1,26 +1,40 @@
 #include "ArmorAddonResolutionCache.h"
 
-auto ArmorAddonResolutionCache::Find(const Key &a_key) -> const Value * {
+auto ArmorAddonResolutionCache::Find(const Key &a_key)
+    -> std::optional<std::reference_wrapper<const Value>> {
   if (auto it = _entries.find(a_key); it != _entries.end()) {
     if (_ttl.count() > 0 &&
         std::chrono::steady_clock::now() >= it->second.ExpiresAt) {
       _lru.erase(it->second.LruIt);
       _entries.erase(it);
-      return nullptr;
+      return std::nullopt;
     }
 
     Touch(a_key, it);
-    return &it->second.Value;
+    return std::cref(it->second.Value);
   }
 
-  return nullptr;
+  return std::nullopt;
 }
 
-void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value) {
+auto ArmorAddonResolutionCache::PeekIgnoringTtl(const Key &a_key) const
+    -> std::optional<std::reference_wrapper<const Value>> {
   if (const auto it = _entries.find(a_key); it != _entries.end()) {
+    return std::cref(it->second.Value);
+  }
+
+  return std::nullopt;
+}
+
+auto ArmorAddonResolutionCache::UpsertIgnoringTtl(Key a_key, Value a_value)
+    -> UpsertResult {
+  if (const auto it = _entries.find(a_key); it != _entries.end()) {
+    const auto previousActiveVariant = it->second.Value.ActiveVariant;
     it->second.Value = std::move(a_value);
+    it->second.ExpiresAt = std::chrono::steady_clock::now() + _ttl;
     Touch(a_key, it);
-    return;
+    return UpsertResult{
+        .HadEntry = true, .PreviousActiveVariant = previousActiveVariant};
   }
 
   _lru.push_front(a_key);
@@ -29,13 +43,17 @@ void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value) {
                          .ExpiresAt = std::chrono::steady_clock::now() + _ttl,
                          .LruIt = _lru.begin()});
 
-  if (_entries.size() <= _capacity) {
-    return;
+  if (_entries.size() > _capacity) {
+    const auto &lruKey = _lru.back();
+    _entries.erase(lruKey);
+    _lru.pop_back();
   }
 
-  const auto &lruKey = _lru.back();
-  _entries.erase(lruKey);
-  _lru.pop_back();
+  return UpsertResult{};
+}
+
+void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value) {
+  UpsertIgnoringTtl(std::move(a_key), std::move(a_value));
 }
 
 void ArmorAddonResolutionCache::Clear() {

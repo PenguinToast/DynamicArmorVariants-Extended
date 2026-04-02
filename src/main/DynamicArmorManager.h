@@ -12,6 +12,10 @@ struct DynamicArmorManagerState;
 
 class DynamicArmorManager {
 public:
+  struct EquippedVariantResolutionStats {
+    bool Changed{false};
+  };
+
   ~DynamicArmorManager();
   DynamicArmorManager(const DynamicArmorManager &) = delete;
   DynamicArmorManager(DynamicArmorManager &&) = delete;
@@ -41,6 +45,9 @@ public:
 
   auto GetEquippedArmorsWithVariants(RE::Actor *a_actor)
       -> std::vector<RE::TESObjectARMO *>;
+
+  auto ResolveEquippedArmorVariants(RE::Actor *a_actor) const
+      -> EquippedVariantResolutionStats;
 
   auto GetDisplayName(const std::string &a_variant) const -> std::string;
 

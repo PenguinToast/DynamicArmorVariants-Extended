@@ -46,9 +46,9 @@ void DynamicArmorManager::VisitArmorAddons(
           : nullptr;
   const auto resolution = dave::detail::GetOrBuildArmorAddonResolution(
       state, a_actor, a_armorAddon);
-  dave::detail::VisitResolvedArmorAddons(state, a_defaultArmor, a_armorAddon,
-                                         sourceContributionMap, resolution,
-                                         a_visit);
+  dave::detail::VisitResolvedArmorAddons(
+      state, a_defaultArmor, a_armorAddon, sourceContributionMap, resolution,
+      a_visit);
 }
 
 auto DynamicArmorManager::ShouldUseCustomInitWornArmor(

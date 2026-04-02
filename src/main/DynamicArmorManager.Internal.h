@@ -4,13 +4,26 @@
 #include "ArmorVariant.h"
 #include "DynamicArmorManager.Types.h"
 
-#include <chrono>
+#include <list>
 #include <optional>
 #include <shared_mutex>
+#include <string_view>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
 namespace dave::detail {
+
+struct VariantCandidateRef {
+  const std::string *Name{nullptr};
+  const ArmorVariant *Variant{nullptr};
+  const ArmorVariant::AddonList *AddonList{nullptr};
+};
+
+struct VariantCandidateCacheEntry {
+  std::vector<VariantCandidateRef> Candidates;
+  std::list<RE::FormID>::iterator LruIt;
+};
 
 struct ArmorSlotContribution {
   RE::TESObjectARMA *ArmorAddon{nullptr};
@@ -27,9 +40,14 @@ struct DynamicArmorManagerState {
   static constexpr std::uint32_t SerializationType = 'AAVO';
   static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
   static constexpr auto ArmorAddonResolutionCacheTtl =
-      std::chrono::milliseconds(500);
+      std::chrono::seconds(10);
 
   tsl::ordered_map<std::string, ArmorVariant> variants;
+  std::unordered_map<std::string_view, std::vector<const ArmorVariant *>>
+      linkedVariantsByTarget;
+  mutable std::list<RE::FormID> variantCandidatesLru;
+  mutable std::unordered_map<RE::FormID, VariantCandidateCacheEntry>
+      variantCandidatesByArmorAddon;
   std::unordered_map<std::string, std::shared_ptr<RE::TESCondition>> conditions;
   std::unordered_map<RE::FormID, std::unordered_map<std::string, std::uint64_t>>
       variantOverrides;
@@ -44,9 +62,15 @@ struct DynamicArmorManagerState {
 auto IsVariantOverrideLocked(const DynamicArmorManagerState &a_state,
                              RE::Actor *a_actor, std::string_view a_stateName)
     -> bool;
+auto IsVariantOverrideLocked(const DynamicArmorManagerState &a_state,
+                             RE::Actor *a_actor,
+                             const std::string &a_stateName) -> bool;
 auto IsVariantConditionLocked(const DynamicArmorManagerState &a_state,
                               RE::Actor *a_actor, std::string_view a_stateName)
     -> bool;
+auto IsVariantConditionLocked(const DynamicArmorManagerState &a_state,
+                              RE::Actor *a_actor,
+                              const std::string &a_stateName) -> bool;
 auto IsUsingVariantLocked(const DynamicArmorManagerState &a_state,
                           RE::Actor *a_actor, std::string_view a_stateName)
     -> bool;
@@ -63,9 +87,13 @@ auto BuildResolvedCoverageMask(
     ArmorVariant::OverrideOption *a_overrideOption = nullptr)
     -> BipedObjectSlot;
 auto BuildArmorAddonResolution(const DynamicArmorManagerState &a_state,
-                               RE::Actor *a_actor,
-                               RE::TESObjectARMA *a_armorAddon)
+                               RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon)
     -> ArmorAddonResolutionCache::Value;
+auto HasVariantsLocked(const DynamicArmorManagerState &a_state,
+                       RE::TESObjectARMO *a_armor) -> bool;
+auto GetOrBuildVariantCandidatesForAddon(const DynamicArmorManagerState &a_state,
+                                         RE::TESObjectARMA *a_armorAddon)
+    -> const std::vector<VariantCandidateRef> &;
 auto BuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor)
     -> ArmorSlotContributionMap;
 void VisitResolvedArmorAddons(
@@ -91,5 +119,6 @@ void SetOverrideSequenceLocked(
 void RemoveOverrideLocked(
     std::unordered_map<std::string, std::uint64_t> &a_overrides,
     std::string_view a_variant);
+void RebuildLinkedVariantsIndexLocked(DynamicArmorManagerState &a_state);
 
 } // namespace dave::detail

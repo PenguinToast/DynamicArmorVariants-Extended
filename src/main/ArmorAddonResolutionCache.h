@@ -3,6 +3,7 @@
 #include "ArmorVariant.h"
 
 #include <chrono>
+#include <functional>
 #include <list>
 #include <optional>
 #include <unordered_map>
@@ -21,13 +22,22 @@ public:
     std::optional<ArmorVariant::AddonList> ResolvedAddonList;
   };
 
+  struct UpsertResult {
+    bool HadEntry{false};
+    const ArmorVariant *PreviousActiveVariant{nullptr};
+  };
+
   explicit ArmorAddonResolutionCache(std::size_t a_capacity)
       : _capacity(a_capacity) {}
   ArmorAddonResolutionCache(std::size_t a_capacity,
                             std::chrono::milliseconds a_ttl)
       : _capacity(a_capacity), _ttl(a_ttl) {}
 
-  auto Find(const Key &a_key) -> const Value *;
+  auto Find(const Key &a_key)
+      -> std::optional<std::reference_wrapper<const Value>>;
+  auto PeekIgnoringTtl(const Key &a_key) const
+      -> std::optional<std::reference_wrapper<const Value>>;
+  auto UpsertIgnoringTtl(Key a_key, Value a_value) -> UpsertResult;
   void Insert(Key a_key, Value a_value);
   void Clear();
   void ClearActor(RE::FormID a_actorFormID);
