@@ -1,19 +1,19 @@
 #pragma once
 
 #ifndef DAVE_VERSION_MAJOR
-#define DAVE_VERSION_MAJOR 1
+#error "DAVE_VERSION_MAJOR must be provided by the build system"
 #endif
 
 #ifndef DAVE_VERSION_MINOR
-#define DAVE_VERSION_MINOR 1
+#error "DAVE_VERSION_MINOR must be provided by the build system"
 #endif
 
 #ifndef DAVE_VERSION_PATCH
-#define DAVE_VERSION_PATCH 0
+#error "DAVE_VERSION_PATCH must be provided by the build system"
 #endif
 
 #ifndef DAVE_VERSION_STRING
-#define DAVE_VERSION_STRING "1.1.0-dev"
+#error "DAVE_VERSION_STRING must be provided by the build system"
 #endif
 
 namespace Plugin {

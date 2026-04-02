@@ -27,6 +27,7 @@ add_requires("jsoncpp 1.9.6", "ordered_map 1.1.0")
 target("DynamicArmorVariants")
     set_kind("shared")
     set_basename("DynamicArmorVariants")
+    set_version(build_version)
 
     add_deps("commonlibsse-ng")
     add_packages("jsoncpp", "ordered_map")
