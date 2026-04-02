@@ -277,8 +277,18 @@ auto DynamicArmorManager::BuildResolvedCoverageMask(
   auto hasActiveVariant = false;
   auto overrideOption = ArmorVariant::OverrideOption::None;
   const auto &contributionMap = GetOrBuildArmorSlotContributionMap(a_armor);
+  const auto race = a_actor ? a_actor->GetRace() : nullptr;
 
   for (const auto &source : contributionMap.Sources) {
+    // Worn-mask coverage must only include source addons that can actually be
+    // selected for this actor. Armors often carry multiple race-specific ARMA
+    // records for the same visual branch; if we aggregate every source addon,
+    // inactive race branches can incorrectly keep head/hair bits occupied.
+    if (race && source.ArmorAddon &&
+        !Ext::TESObjectARMA::HasRace(source.ArmorAddon, race)) {
+      continue;
+    }
+
     const auto &resolution =
         GetOrBuildArmorAddonResolution(a_actor, source.ArmorAddon);
 
