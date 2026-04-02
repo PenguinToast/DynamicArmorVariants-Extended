@@ -1,10 +1,12 @@
 #include "DynamicArmorManager.h"
+#include "DynamicArmorManager.Internal.h"
 #include "Json.h"
 
 #include <mutex>
 
 void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
-  std::shared_lock lock(_stateMutex);
+  const auto &state = *state_;
+  std::shared_lock lock(state.mutex);
   Json::StreamWriterBuilder builder;
   builder["commentStyle"] = "None";
   builder["indentation"] = "";
@@ -15,7 +17,7 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
   Json::Value value;
 
   Json::Value variantOverrides;
-  for (auto &[formID, variantMap] : _variantOverrides) {
+  for (auto &[formID, variantMap] : state.variantOverrides) {
     Json::Value variantOverride;
 
     Json::Value variants;
@@ -41,24 +43,27 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
   writer->write(value, std::addressof(ss));
   auto str = ss.str();
 
-  a_skse->WriteRecord(SerializationType, SerializationVersion, str.data(),
+  a_skse->WriteRecord(dave::detail::DynamicArmorManagerState::SerializationType,
+                      dave::detail::DynamicArmorManagerState::SerializationVersion,
+                      str.data(),
                       static_cast<std::uint32_t>(str.size()));
 }
 
 void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
-  std::unique_lock lock(_stateMutex);
-  ClearArmorAddonResolutionCache();
-  _variantOverrides.clear();
-  _nextOverrideSequence = 1;
+  auto &state = *state_;
+  std::unique_lock lock(state.mutex);
+  dave::detail::ClearArmorAddonResolutionCache(state);
+  state.variantOverrides.clear();
+  state.nextOverrideSequence = 1;
   std::uint32_t type;
   std::uint32_t version;
   std::uint32_t length;
   a_skse->GetNextRecordInfo(type, version, length);
 
-  if (type != SerializationType)
+  if (type != dave::detail::DynamicArmorManagerState::SerializationType)
     return;
 
-  if (version != SerializationVersion) {
+  if (version != dave::detail::DynamicArmorManagerState::SerializationVersion) {
     logger::info("Cannot deserialize record data from version {}"sv, version);
     return;
   }
@@ -99,7 +104,7 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
     RE::FormID formID;
     a_skse->ResolveFormID(variantOverride["actor"].asUInt(), formID);
 
-    auto [it, inserted] = _variantOverrides.emplace(
+    auto [it, inserted] = state.variantOverrides.emplace(
         formID, std::unordered_map<std::string, std::uint64_t>{});
     auto &variantMap = it->second;
 
@@ -111,15 +116,16 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
     for (auto &variant : variants) {
       if (variant.isString()) {
         variantMap.insert_or_assign(variant.asString(),
-                                    _nextOverrideSequence++);
+                                    state.nextOverrideSequence++);
       }
     }
   }
 }
 
 void DynamicArmorManager::Revert() {
-  std::unique_lock lock(_stateMutex);
-  ClearArmorAddonResolutionCache();
-  _variantOverrides.clear();
-  _nextOverrideSequence = 1;
+  auto &state = *state_;
+  std::unique_lock lock(state.mutex);
+  dave::detail::ClearArmorAddonResolutionCache(state);
+  state.variantOverrides.clear();
+  state.nextOverrideSequence = 1;
 }

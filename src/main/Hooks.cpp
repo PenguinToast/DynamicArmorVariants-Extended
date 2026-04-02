@@ -127,18 +127,18 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
     if (Ext::TESObjectARMA::HasRace(armorAddon, race)) {
 
       auto visitor = [&initializedAddons, a_biped, sex, useMaskOverrides](
-                         auto *visitedArmor, auto *visitedArmorAddon,
-                         const BipedObjectSlot,
-                         const std::optional<BipedObjectSlot> a_overrideMask) {
+                         const DynamicArmorResolvedAddonVisit &a_visit) {
+        auto *visitedArmor = a_visit.Armor;
+        auto *visitedArmorAddon = a_visit.ArmorAddon;
         if (!visitedArmorAddon ||
             !initializedAddons.insert(visitedArmorAddon).second) {
           return;
         }
 
-        if (useMaskOverrides && a_overrideMask.has_value()) {
+        if (useMaskOverrides && a_visit.InitOverrideMask.has_value()) {
           ScopedBodyPartTestOverride maskOverride{
               static_cast<RE::BGSBipedObjectForm *>(visitedArmor),
-              *a_overrideMask};
+              *a_visit.InitOverrideMask};
           return Ext::TESObjectARMA::InitWornArmorAddon(
               visitedArmorAddon, visitedArmor, a_biped, sex);
         }
