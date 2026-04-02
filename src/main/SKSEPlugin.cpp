@@ -1,4 +1,5 @@
 #include "ConfigLoader.h"
+#include "DynamicArmorManager.h"
 #include "Hooks.h"
 #include "Papyrus/Papyrus.h"
 #include "Serialization.h"
@@ -45,9 +46,9 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   SKSE::AllocTrampoline(1 << 8);
   logger::info("{} build {}"sv, Plugin::NAME, Plugin::VERSION_STRING);
   auto *messaging = SKSE::GetMessagingInterface();
-  const auto settings = Settings::Load();
+  Settings::Load();
 
-  Hooks::Install(settings.installEquipConflictHook);
+  Hooks::Install();
 
   SKSE::GetPapyrusInterface()->Register(Papyrus::RegisterFuncs);
 

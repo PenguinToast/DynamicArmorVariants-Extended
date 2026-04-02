@@ -1,3 +1,4 @@
 {
-  "installEquipConflictHook": true
+  "installEquipConflictHook": true,
+  "useOwnershipBasedArmorMasks": true
 }

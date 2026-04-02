@@ -6,6 +6,8 @@
 #include <sstream>
 
 namespace {
+Settings g_settings{};
+
 auto GetSettingsPath() -> fs::path {
   return fs::current_path() / "Data" / "SKSE" / "Plugins" /
          "DynamicArmorVariants" / "settings.json";
@@ -23,7 +25,8 @@ auto Settings::Load() -> Settings {
           "Failed to open settings file {}; equip conflict hook will stay "
           "disabled"sv,
           path.string());
-      return settings;
+      g_settings = settings;
+      return g_settings;
     }
 
     std::ostringstream buffer;
@@ -42,22 +45,35 @@ auto Settings::Load() -> Settings {
           "Failed to parse settings file {}; equip conflict hook will stay "
           "disabled: {}"sv,
           path.string(), errors);
-      return settings;
+      g_settings = settings;
+      return g_settings;
     }
 
     settings.installEquipConflictHook =
         root.get("installEquipConflictHook", false).asBool();
-    logger::info("Loaded settings from {} (installEquipConflictHook={})"sv,
-                 path.string(), settings.installEquipConflictHook);
-    return settings;
+    settings.useOwnershipBasedArmorMasks =
+        root.get("useOwnershipBasedArmorMasks", false).asBool();
+    logger::info(
+        "Loaded settings from {} (installEquipConflictHook={}, "
+        "useOwnershipBasedArmorMasks={})"sv,
+        path.string(), settings.installEquipConflictHook,
+        settings.useOwnershipBasedArmorMasks);
+    g_settings = settings;
+    return g_settings;
   } catch (const std::exception &a_error) {
     logger::error(
-        "Failed to load settings; equip conflict hook will stay disabled: {}"sv,
+        "Failed to load settings; equip conflict hook and partial-slot "
+        "resolution will stay disabled: {}"sv,
         a_error.what());
-    return settings;
+    g_settings = settings;
+    return g_settings;
   } catch (...) {
     logger::error(
-        "Failed to load settings; equip conflict hook will stay disabled"sv);
-    return settings;
+        "Failed to load settings; equip conflict hook and partial-slot "
+        "resolution will stay disabled"sv);
+    g_settings = settings;
+    return g_settings;
   }
 }
+
+auto Settings::Get() -> const Settings & { return g_settings; }

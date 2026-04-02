@@ -1,11 +1,18 @@
 #include "DynamicArmorManager.h"
 #include "DynamicArmorManager.Internal.h"
+#include "Settings.h"
 
 #include "Ext/Actor.h"
 #include "Ext/TESObjectARMA.h"
 
 #include <mutex>
 #include <optional>
+
+namespace {
+auto UsesPartialSlotResolution() -> bool {
+  return Settings::Get().useOwnershipBasedArmorMasks;
+}
+} // namespace
 
 void DynamicArmorManager::VisitArmorAddons(
     RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
@@ -30,8 +37,12 @@ void DynamicArmorManager::VisitArmorAddons(
     return;
   }
 
-  const auto &sourceContributionMap =
-      dave::detail::GetOrBuildArmorSlotContributionMap(state, a_defaultArmor);
+  const auto useOwnershipMasks = UsesPartialSlotResolution();
+  const auto *sourceContributionMap =
+      useOwnershipMasks
+          ? std::addressof(
+                dave::detail::GetOrBuildArmorSlotContributionMap(state, a_defaultArmor))
+          : nullptr;
   const auto resolution =
       dave::detail::GetOrBuildArmorAddonResolution(state, a_actor, a_armorAddon);
   dave::detail::VisitResolvedArmorAddons(state, a_defaultArmor, a_armorAddon,
@@ -43,6 +54,10 @@ auto DynamicArmorManager::ShouldUseCustomInitWornArmor(
     RE::Actor *a_actor, RE::TESObjectARMO *a_armor) const -> bool {
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
+  if (!UsesPartialSlotResolution()) {
+    return false;
+  }
+
   if (!a_actor || !a_armor) {
     return false;
   }
@@ -89,10 +104,8 @@ auto DynamicArmorManager::GetBipedObjectSlots(RE::Actor *a_actor,
 
   auto hasActiveVariant = false;
   auto overrideOption = ArmorVariant::OverrideOption::None;
-  const auto resolvedMask =
-      dave::detail::BuildResolvedCoverageMask(state, a_actor, a_armor,
-                                              &hasActiveVariant,
-                                              &overrideOption);
+  const auto resolvedMask = dave::detail::BuildResolvedCoverageMask(
+      state, a_actor, a_armor, &hasActiveVariant, &overrideOption);
 
   // Preserve vanilla armor-mask behavior when no active variant affects this
   // armor, because some armors define slots differently from their addons.

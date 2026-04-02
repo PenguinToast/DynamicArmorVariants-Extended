@@ -1,4 +1,5 @@
 #include "DynamicArmorManager.Internal.h"
+#include "Settings.h"
 
 #include "Ext/TESObjectARMA.h"
 
@@ -6,6 +7,20 @@
 
 namespace {
 using SlotMask = std::uint32_t;
+enum class BranchMaskMode {
+  LegacyResolvedMask,
+  OwnershipMask,
+};
+
+auto GetBranchMaskMode() -> BranchMaskMode {
+  return Settings::Get().useOwnershipBasedArmorMasks
+             ? BranchMaskMode::OwnershipMask
+             : BranchMaskMode::LegacyResolvedMask;
+}
+
+auto UsesOwnershipMasks(const BranchMaskMode a_mode) -> bool {
+  return a_mode == BranchMaskMode::OwnershipMask;
+}
 
 constexpr auto ToSlotMask(const BipedObjectSlot a_slot) -> SlotMask {
   return static_cast<SlotMask>(std::to_underlying(a_slot));
@@ -58,30 +73,75 @@ auto GetAffinityMaskForArmorOnlyBit(const SlotMask a_bit) -> SlotMask {
   }
 }
 
+auto BuildResolvedBranchVisit(
+    dave::detail::DynamicArmorManagerState &a_state,
+    RE::TESObjectARMO *a_defaultArmor, RE::TESObjectARMA *a_sourceArmorAddon,
+    const dave::detail::ArmorSlotContributionMap *a_sourceContributionMap,
+    const ArmorVariant::ReplacementAddon &a_resolvedAddon,
+    const BranchMaskMode a_mode) -> DynamicArmorResolvedAddonVisit {
+  auto *resolvedArmor =
+      a_resolvedAddon.Armor ? a_resolvedAddon.Armor : a_defaultArmor;
+  auto effectiveMask =
+      a_resolvedAddon.ArmorAddon->bipedModelData.bipedObjectSlots.get();
+
+  if (UsesOwnershipMasks(a_mode)) {
+    if (a_resolvedAddon.Armor) {
+      const auto &replacementContributionMap =
+          dave::detail::GetOrBuildArmorSlotContributionMap(a_state,
+                                                           a_resolvedAddon.Armor);
+      effectiveMask = dave::detail::FindOwnershipMaskForAddon(
+          replacementContributionMap, a_resolvedAddon.ArmorAddon);
+    } else if (a_sourceContributionMap) {
+      effectiveMask = dave::detail::FindOwnershipMaskForAddon(
+          *a_sourceContributionMap, a_sourceArmorAddon);
+    }
+  } else if (a_resolvedAddon.Armor) {
+    effectiveMask = a_resolvedAddon.Armor->bipedModelData.bipedObjectSlots.get();
+  }
+
+  const auto overrideMask = UsesOwnershipMasks(a_mode) && resolvedArmor &&
+                                    resolvedArmor->bipedModelData
+                                            .bipedObjectSlots.get() !=
+                                        effectiveMask
+                                ? std::optional{effectiveMask}
+                                : std::nullopt;
+
+  return DynamicArmorResolvedAddonVisit{
+      .Armor = resolvedArmor,
+      .ArmorAddon = a_resolvedAddon.ArmorAddon,
+      .EffectiveMask = effectiveMask,
+      .InitOverrideMask = overrideMask,
+  };
+}
+
 } // namespace
 
 auto dave::detail::BuildResolvedCoverageMask(
     DynamicArmorManagerState &a_state, RE::Actor *a_actor,
     RE::TESObjectARMO *a_armor, bool *a_hasActiveVariant,
     ArmorVariant::OverrideOption *a_overrideOption) -> BipedObjectSlot {
+  const auto branchMaskMode = GetBranchMaskMode();
   SlotMask resolvedMask = 0;
   auto hasActiveVariant = false;
   auto overrideOption = ArmorVariant::OverrideOption::None;
-  const auto &contributionMap = GetOrBuildArmorSlotContributionMap(a_state, a_armor);
+  const auto *contributionMap =
+      UsesOwnershipMasks(branchMaskMode)
+          ? std::addressof(GetOrBuildArmorSlotContributionMap(a_state, a_armor))
+          : nullptr;
   const auto race = a_actor ? a_actor->GetRace() : nullptr;
 
-  for (const auto &source : contributionMap.Sources) {
+  const auto visitSourceArmorAddon = [&](RE::TESObjectARMA *a_sourceArmorAddon) {
     // Worn-mask coverage must only include source addons that can actually be
     // selected for this actor. Armors often carry multiple race-specific ARMA
     // records for the same visual branch; if we aggregate every source addon,
     // inactive race branches can incorrectly keep head/hair bits occupied.
-    if (race && source.ArmorAddon &&
-        !Ext::TESObjectARMA::HasRace(source.ArmorAddon, race)) {
-      continue;
+    if (race && a_sourceArmorAddon &&
+        !Ext::TESObjectARMA::HasRace(a_sourceArmorAddon, race)) {
+      return;
     }
 
     const auto &resolution =
-        GetOrBuildArmorAddonResolution(a_state, a_actor, source.ArmorAddon);
+        GetOrBuildArmorAddonResolution(a_state, a_actor, a_sourceArmorAddon);
 
     if (resolution.ActiveVariant) {
       hasActiveVariant = true;
@@ -92,10 +152,20 @@ auto dave::detail::BuildResolvedCoverageMask(
     }
 
     VisitResolvedArmorAddons(
-        a_state, a_armor, source.ArmorAddon, contributionMap, resolution,
+        a_state, a_armor, a_sourceArmorAddon, contributionMap, resolution,
         [&resolvedMask](const DynamicArmorResolvedAddonVisit &a_visit) {
           resolvedMask |= ToSlotMask(a_visit.EffectiveMask);
         });
+  };
+
+  if (UsesOwnershipMasks(branchMaskMode)) {
+    for (const auto &source : contributionMap->Sources) {
+      visitSourceArmorAddon(source.ArmorAddon);
+    }
+  } else {
+    for (auto *armorAddon : a_armor->armorAddons) {
+      visitSourceArmorAddon(armorAddon);
+    }
   }
 
   if (a_hasActiveVariant) {
@@ -178,28 +248,21 @@ auto dave::detail::BuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor)
 void dave::detail::VisitResolvedArmorAddons(
     DynamicArmorManagerState &a_state, RE::TESObjectARMO *a_defaultArmor,
     RE::TESObjectARMA *a_sourceArmorAddon,
-    const ArmorSlotContributionMap &a_sourceContributionMap,
+    const ArmorSlotContributionMap *a_sourceContributionMap,
     const ArmorAddonResolutionCache::Value &a_resolution,
     const DynamicArmorResolvedAddonVisitor &a_visit) {
+  const auto branchMaskMode = GetBranchMaskMode();
+
   if (!a_sourceArmorAddon) {
     return;
   }
 
   if (!a_resolution.ActiveVariant) {
-    const auto effectiveMask =
-        FindOwnershipMaskForAddon(a_sourceContributionMap, a_sourceArmorAddon);
-    const auto overrideMask =
-        a_defaultArmor &&
-                a_defaultArmor->bipedModelData.bipedObjectSlots.get() !=
-                    effectiveMask
-            ? std::optional{effectiveMask}
-            : std::nullopt;
-    a_visit(DynamicArmorResolvedAddonVisit{
-        .Armor = a_defaultArmor,
-        .ArmorAddon = a_sourceArmorAddon,
-        .EffectiveMask = effectiveMask,
-        .InitOverrideMask = overrideMask,
-    });
+    a_visit(BuildResolvedBranchVisit(
+        a_state, a_defaultArmor, a_sourceArmorAddon, a_sourceContributionMap,
+        ArmorVariant::ReplacementAddon{.Armor = nullptr,
+                                       .ArmorAddon = a_sourceArmorAddon},
+        branchMaskMode));
     return;
   }
 
@@ -212,28 +275,9 @@ void dave::detail::VisitResolvedArmorAddons(
       continue;
     }
 
-    auto *resolvedArmor =
-        resolvedAddon.Armor ? resolvedAddon.Armor : a_defaultArmor;
-    auto effectiveMask = resolvedAddon.ArmorAddon->bipedModelData.bipedObjectSlots.get();
-    if (resolvedAddon.Armor) {
-      const auto &replacementContributionMap =
-          GetOrBuildArmorSlotContributionMap(a_state, resolvedAddon.Armor);
-      effectiveMask = FindOwnershipMaskForAddon(replacementContributionMap,
-                                                resolvedAddon.ArmorAddon);
-    }
-
-    const auto overrideMask =
-        resolvedArmor &&
-                resolvedArmor->bipedModelData.bipedObjectSlots.get() !=
-                    effectiveMask
-            ? std::optional{effectiveMask}
-            : std::nullopt;
-    a_visit(DynamicArmorResolvedAddonVisit{
-        .Armor = resolvedArmor,
-        .ArmorAddon = resolvedAddon.ArmorAddon,
-        .EffectiveMask = effectiveMask,
-        .InitOverrideMask = overrideMask,
-    });
+    a_visit(BuildResolvedBranchVisit(a_state, a_defaultArmor, a_sourceArmorAddon,
+                                     a_sourceContributionMap, resolvedAddon,
+                                     branchMaskMode));
   }
 }
 
