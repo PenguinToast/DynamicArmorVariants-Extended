@@ -36,8 +36,9 @@ void SetOverrideSequenceLocked(
   a_overrides.insert_or_assign(std::string(a_variant), a_sequence);
 }
 
-void RemoveOverrideLocked(std::unordered_map<std::string, std::uint64_t> &a_overrides,
-                          std::string_view a_variant) {
+void RemoveOverrideLocked(
+    std::unordered_map<std::string, std::uint64_t> &a_overrides,
+    std::string_view a_variant) {
   a_overrides.erase(std::string(a_variant));
 }
 } // namespace dave::detail
@@ -99,7 +100,8 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
     }
   }
 
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state, a_actor->GetFormID());
+  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
+                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -153,7 +155,8 @@ void DynamicArmorManager::ApplyVariant(RE::Actor *a_actor,
     }
   }
 
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state, a_actor->GetFormID());
+  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
+                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -186,7 +189,8 @@ void DynamicArmorManager::ResetVariant(RE::Actor *a_actor,
     state.variantOverrides.erase(it);
   }
 
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state, a_actor->GetFormID());
+  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
+                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -205,7 +209,8 @@ void DynamicArmorManager::RemoveVariantOverride(RE::Actor *a_actor,
     state.variantOverrides.erase(it);
   }
 
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state, a_actor->GetFormID());
+  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
+                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 
@@ -214,7 +219,8 @@ void DynamicArmorManager::ResetAllVariants(RE::Actor *a_actor) {
   std::unique_lock lock(state.mutex);
   dave::detail::ClearArmorAddonResolutionCache(state);
   state.variantOverrides.erase(a_actor->GetFormID());
-  dave::detail::ClearArmorAddonResolutionCacheLocked(state, a_actor->GetFormID());
+  dave::detail::ClearArmorAddonResolutionCacheLocked(state,
+                                                     a_actor->GetFormID());
   Ext::Actor::Update3DSafe(a_actor);
 }
 

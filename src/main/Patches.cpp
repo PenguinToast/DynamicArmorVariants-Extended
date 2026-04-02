@@ -61,7 +61,8 @@ void Patches::WriteGetWornMaskPatch(GetWornMaskFunc *a_func) {
 }
 
 void Patches::WriteTestBodyPartByIndexPatch(TestBodyPartByIndexFunc *a_func) {
-  auto hook = util::MakeHook(RE::Offset::BGSBipedObjectForm::TestBodyPartByIndex);
+  auto hook =
+      util::MakeHook(RE::Offset::BGSBipedObjectForm::TestBodyPartByIndex);
 
   struct Patch : public Xbyak::CodeGenerator {
     Patch(std::uintptr_t a_funcAddr) {

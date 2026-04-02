@@ -77,7 +77,8 @@ struct PendingUnequip {
 
 class EquipConflictVisitor : public Ext::IItemChangeVisitor {
 public:
-  explicit EquipConflictVisitor(BipedObjectSlot a_bodySlot) : bodySlot(a_bodySlot) {}
+  explicit EquipConflictVisitor(BipedObjectSlot a_bodySlot)
+      : bodySlot(a_bodySlot) {}
 
   std::uint32_t Visit(RE::InventoryEntryData *a_entryData) override {
     auto *armor = a_entryData && a_entryData->object
@@ -126,8 +127,8 @@ void Hooks::Install() {
 void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
                           RE::BSTSmartPointer<RE::BipedAnim> *a_biped) {
   const auto useMaskOverrides =
-      DynamicArmorManager::GetSingleton()->ShouldUseCustomInitWornArmor(a_actor,
-                                                                        a_armor);
+      DynamicArmorManager::GetSingleton()->ShouldUseCustomInitWornArmor(
+          a_actor, a_armor);
   auto race = a_actor->GetRace();
   auto sex = a_actor->GetActorBase()->GetSex();
   std::unordered_set<RE::TESObjectARMA *> initializedAddons;
@@ -153,9 +154,8 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
               visitedArmorAddon, visitedArmor, a_biped, sex);
         }
 
-        return Ext::TESObjectARMA::InitWornArmorAddon(visitedArmorAddon,
-                                                      visitedArmor, a_biped,
-                                                      sex);
+        return Ext::TESObjectARMA::InitWornArmorAddon(
+            visitedArmorAddon, visitedArmor, a_biped, sex);
       };
 
       DynamicArmorManager::GetSingleton()->VisitArmorAddons(

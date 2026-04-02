@@ -9,7 +9,8 @@ inline constexpr auto Update3D = MAKE_RELOCATION(19316, 19743);
 // SkyrimVR uses the pre-AE function family for this hook, but the current VR
 // address library release does not expose ID 36979 yet, so keep using the
 // verified raw VR offset until the database catches up.
-inline constexpr auto FixEquipConflictCheck = MAKE_OFFSET(36979, 38004, 0x6155F0);
+inline constexpr auto FixEquipConflictCheck =
+    MAKE_OFFSET(36979, 38004, 0x6155F0);
 } // namespace Actor
 
 namespace InventoryChanges {

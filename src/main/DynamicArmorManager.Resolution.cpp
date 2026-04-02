@@ -24,7 +24,8 @@ void DynamicArmorManager::VisitArmorAddons(
     return;
   }
 
-  if (!a_actor || !a_defaultArmor || Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
+  if (!a_actor || !a_defaultArmor ||
+      Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
     const auto initMask =
         a_defaultArmor ? a_defaultArmor->bipedModelData.bipedObjectSlots.get()
                        : a_armorAddon->bipedModelData.bipedObjectSlots.get();
@@ -40,11 +41,11 @@ void DynamicArmorManager::VisitArmorAddons(
   const auto useOwnershipMasks = UsesPartialSlotResolution();
   const auto *sourceContributionMap =
       useOwnershipMasks
-          ? std::addressof(
-                dave::detail::GetOrBuildArmorSlotContributionMap(state, a_defaultArmor))
+          ? std::addressof(dave::detail::GetOrBuildArmorSlotContributionMap(
+                state, a_defaultArmor))
           : nullptr;
-  const auto resolution =
-      dave::detail::GetOrBuildArmorAddonResolution(state, a_actor, a_armorAddon);
+  const auto resolution = dave::detail::GetOrBuildArmorAddonResolution(
+      state, a_actor, a_armorAddon);
   dave::detail::VisitResolvedArmorAddons(state, a_defaultArmor, a_armorAddon,
                                          sourceContributionMap, resolution,
                                          a_visit);
@@ -72,8 +73,8 @@ auto DynamicArmorManager::ShouldUseCustomInitWornArmor(
       continue;
     }
 
-    if (const auto resolution =
-            dave::detail::GetOrBuildArmorAddonResolution(state, a_actor, armorAddon);
+    if (const auto resolution = dave::detail::GetOrBuildArmorAddonResolution(
+            state, a_actor, armorAddon);
         resolution.ActiveVariant) {
       return true;
     }

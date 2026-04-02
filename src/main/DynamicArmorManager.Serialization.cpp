@@ -43,10 +43,10 @@ void DynamicArmorManager::Serialize(SKSE::SerializationInterface *a_skse) {
   writer->write(value, std::addressof(ss));
   auto str = ss.str();
 
-  a_skse->WriteRecord(dave::detail::DynamicArmorManagerState::SerializationType,
-                      dave::detail::DynamicArmorManagerState::SerializationVersion,
-                      str.data(),
-                      static_cast<std::uint32_t>(str.size()));
+  a_skse->WriteRecord(
+      dave::detail::DynamicArmorManagerState::SerializationType,
+      dave::detail::DynamicArmorManagerState::SerializationVersion, str.data(),
+      static_cast<std::uint32_t>(str.size()));
 }
 
 void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {

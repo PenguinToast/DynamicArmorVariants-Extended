@@ -27,10 +27,9 @@ public:
                     const std::shared_ptr<RE::TESCondition> &a_condition);
   void ClearCondition(std::string_view a_state);
 
-  void VisitArmorAddons(
-      RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
-      RE::TESObjectARMA *a_armorAddon,
-      const DynamicArmorResolvedAddonVisitor &a_visit) const;
+  void VisitArmorAddons(RE::Actor *a_actor, RE::TESObjectARMO *a_defaultArmor,
+                        RE::TESObjectARMA *a_armorAddon,
+                        const DynamicArmorResolvedAddonVisitor &a_visit) const;
   auto ShouldUseCustomInitWornArmor(RE::Actor *a_actor,
                                     RE::TESObjectARMO *a_armor) const -> bool;
 

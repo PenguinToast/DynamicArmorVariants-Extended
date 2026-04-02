@@ -41,10 +41,9 @@ auto dave::detail::IsUsingVariantLocked(const DynamicArmorManagerState &a_state,
          IsVariantConditionLocked(a_state, a_actor, a_stateName);
 }
 
-auto dave::detail::IsVariantOverrideLocked(const DynamicArmorManagerState &a_state,
-                                           RE::Actor *a_actor,
-                                           std::string_view a_stateName)
-    -> bool {
+auto dave::detail::IsVariantOverrideLocked(
+    const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    std::string_view a_stateName) -> bool {
   if (!a_actor) {
     return false;
   }
@@ -59,10 +58,9 @@ auto dave::detail::IsVariantOverrideLocked(const DynamicArmorManagerState &a_sta
   return false;
 }
 
-auto dave::detail::IsVariantConditionLocked(const DynamicArmorManagerState &a_state,
-                                            RE::Actor *a_actor,
-                                            std::string_view a_stateName)
-    -> bool {
+auto dave::detail::IsVariantConditionLocked(
+    const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    std::string_view a_stateName) -> bool {
   if (!a_actor) {
     return false;
   }
@@ -77,10 +75,9 @@ auto dave::detail::IsVariantConditionLocked(const DynamicArmorManagerState &a_st
   return false;
 }
 
-auto dave::detail::GetOrBuildArmorAddonResolution(DynamicArmorManagerState &a_state,
-                                                  RE::Actor *a_actor,
-                                                  RE::TESObjectARMA *a_armorAddon)
-    -> ArmorAddonResolutionCache::Value {
+auto dave::detail::GetOrBuildArmorAddonResolution(
+    DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    RE::TESObjectARMA *a_armorAddon) -> ArmorAddonResolutionCache::Value {
   const ArmorAddonResolutionCache::Key key{
       .ActorFormID = a_actor ? a_actor->GetFormID() : 0,
       .ArmorAddonFormID = a_armorAddon ? a_armorAddon->GetFormID() : 0};
@@ -113,10 +110,9 @@ auto dave::detail::GetOrBuildArmorSlotContributionMap(
       .first->second;
 }
 
-auto dave::detail::BuildArmorAddonResolution(const DynamicArmorManagerState &a_state,
-                                             RE::Actor *a_actor,
-                                             RE::TESObjectARMA *a_armorAddon)
-    -> ArmorAddonResolutionCache::Value {
+auto dave::detail::BuildArmorAddonResolution(
+    const DynamicArmorManagerState &a_state, RE::Actor *a_actor,
+    RE::TESObjectARMA *a_armorAddon) -> ArmorAddonResolutionCache::Value {
   ArmorAddonResolutionCache::Value resolution{};
   if (!a_actor || !a_armorAddon) {
     return resolution;
@@ -125,7 +121,8 @@ auto dave::detail::BuildArmorAddonResolution(const DynamicArmorManagerState &a_s
   std::unordered_map<std::string_view, const ArmorVariant::AddonList *>
       linkedAddonLists;
   std::unordered_map<std::string, std::uint64_t> overridePriorityByName;
-  if (const auto overrideIt = a_state.variantOverrides.find(a_actor->GetFormID());
+  if (const auto overrideIt =
+          a_state.variantOverrides.find(a_actor->GetFormID());
       overrideIt != a_state.variantOverrides.end()) {
     overridePriorityByName = overrideIt->second;
   }

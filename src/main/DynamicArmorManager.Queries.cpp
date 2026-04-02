@@ -5,8 +5,7 @@
 
 namespace dave::detail {
 auto GetVariantsLocked(const DynamicArmorManagerState &a_state,
-                       RE::TESObjectARMO *a_armor)
-    -> std::vector<std::string> {
+                       RE::TESObjectARMO *a_armor) -> std::vector<std::string> {
   std::vector<std::string> result;
 
   if (!a_armor) {

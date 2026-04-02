@@ -37,12 +37,12 @@ constexpr SlotMask kHeadLikeMask =
 
 constexpr SlotMask kBodyLikeMask =
     ToSlotMask(BipedObjectSlot::kBody) | ToSlotMask(BipedObjectSlot::kHands) |
-    ToSlotMask(BipedObjectSlot::kForearms) | ToSlotMask(BipedObjectSlot::kFeet) |
-    ToSlotMask(BipedObjectSlot::kCalves);
+    ToSlotMask(BipedObjectSlot::kForearms) |
+    ToSlotMask(BipedObjectSlot::kFeet) | ToSlotMask(BipedObjectSlot::kCalves);
 
-constexpr SlotMask kNeckLikeMask =
-    ToSlotMask(BipedObjectSlot::kAmulet) |
-    ToSlotMask(BipedObjectSlot::kModNeck) | ToSlotMask(BipedObjectSlot::kBody);
+constexpr SlotMask kNeckLikeMask = ToSlotMask(BipedObjectSlot::kAmulet) |
+                                   ToSlotMask(BipedObjectSlot::kModNeck) |
+                                   ToSlotMask(BipedObjectSlot::kBody);
 
 constexpr SlotMask kRingLikeMask =
     ToSlotMask(BipedObjectSlot::kRing) |
@@ -87,8 +87,8 @@ auto BuildResolvedBranchVisit(
   if (UsesOwnershipMasks(a_mode)) {
     if (a_resolvedAddon.Armor) {
       const auto &replacementContributionMap =
-          dave::detail::GetOrBuildArmorSlotContributionMap(a_state,
-                                                           a_resolvedAddon.Armor);
+          dave::detail::GetOrBuildArmorSlotContributionMap(
+              a_state, a_resolvedAddon.Armor);
       effectiveMask = dave::detail::FindOwnershipMaskForAddon(
           replacementContributionMap, a_resolvedAddon.ArmorAddon);
     } else if (a_sourceContributionMap) {
@@ -96,15 +96,16 @@ auto BuildResolvedBranchVisit(
           *a_sourceContributionMap, a_sourceArmorAddon);
     }
   } else if (a_resolvedAddon.Armor) {
-    effectiveMask = a_resolvedAddon.Armor->bipedModelData.bipedObjectSlots.get();
+    effectiveMask =
+        a_resolvedAddon.Armor->bipedModelData.bipedObjectSlots.get();
   }
 
-  const auto overrideMask = UsesOwnershipMasks(a_mode) && resolvedArmor &&
-                                    resolvedArmor->bipedModelData
-                                            .bipedObjectSlots.get() !=
-                                        effectiveMask
-                                ? std::optional{effectiveMask}
-                                : std::nullopt;
+  const auto overrideMask =
+      UsesOwnershipMasks(a_mode) && resolvedArmor &&
+              resolvedArmor->bipedModelData.bipedObjectSlots.get() !=
+                  effectiveMask
+          ? std::optional{effectiveMask}
+          : std::nullopt;
 
   return DynamicArmorResolvedAddonVisit{
       .Armor = resolvedArmor,
@@ -130,33 +131,35 @@ auto dave::detail::BuildResolvedCoverageMask(
           : nullptr;
   const auto race = a_actor ? a_actor->GetRace() : nullptr;
 
-  const auto visitSourceArmorAddon = [&](RE::TESObjectARMA *a_sourceArmorAddon) {
-    // Worn-mask coverage must only include source addons that can actually be
-    // selected for this actor. Armors often carry multiple race-specific ARMA
-    // records for the same visual branch; if we aggregate every source addon,
-    // inactive race branches can incorrectly keep head/hair bits occupied.
-    if (race && a_sourceArmorAddon &&
-        !Ext::TESObjectARMA::HasRace(a_sourceArmorAddon, race)) {
-      return;
-    }
+  const auto visitSourceArmorAddon =
+      [&](RE::TESObjectARMA *a_sourceArmorAddon) {
+        // Worn-mask coverage must only include source addons that can actually
+        // be selected for this actor. Armors often carry multiple race-specific
+        // ARMA records for the same visual branch; if we aggregate every source
+        // addon, inactive race branches can incorrectly keep head/hair bits
+        // occupied.
+        if (race && a_sourceArmorAddon &&
+            !Ext::TESObjectARMA::HasRace(a_sourceArmorAddon, race)) {
+          return;
+        }
 
-    const auto &resolution =
-        GetOrBuildArmorAddonResolution(a_state, a_actor, a_sourceArmorAddon);
+        const auto &resolution = GetOrBuildArmorAddonResolution(
+            a_state, a_actor, a_sourceArmorAddon);
 
-    if (resolution.ActiveVariant) {
-      hasActiveVariant = true;
-      if (util::to_underlying(resolution.ActiveVariant->OverrideHead) >
-          util::to_underlying(overrideOption)) {
-        overrideOption = resolution.ActiveVariant->OverrideHead;
-      }
-    }
+        if (resolution.ActiveVariant) {
+          hasActiveVariant = true;
+          if (util::to_underlying(resolution.ActiveVariant->OverrideHead) >
+              util::to_underlying(overrideOption)) {
+            overrideOption = resolution.ActiveVariant->OverrideHead;
+          }
+        }
 
-    VisitResolvedArmorAddons(
-        a_state, a_armor, a_sourceArmorAddon, contributionMap, resolution,
-        [&resolvedMask](const DynamicArmorResolvedAddonVisit &a_visit) {
-          resolvedMask |= ToSlotMask(a_visit.EffectiveMask);
-        });
-  };
+        VisitResolvedArmorAddons(
+            a_state, a_armor, a_sourceArmorAddon, contributionMap, resolution,
+            [&resolvedMask](const DynamicArmorResolvedAddonVisit &a_visit) {
+              resolvedMask |= ToSlotMask(a_visit.EffectiveMask);
+            });
+      };
 
   if (UsesOwnershipMasks(branchMaskMode)) {
     for (const auto &source : contributionMap->Sources) {
@@ -275,9 +278,9 @@ void dave::detail::VisitResolvedArmorAddons(
       continue;
     }
 
-    a_visit(BuildResolvedBranchVisit(a_state, a_defaultArmor, a_sourceArmorAddon,
-                                     a_sourceContributionMap, resolvedAddon,
-                                     branchMaskMode));
+    a_visit(BuildResolvedBranchVisit(
+        a_state, a_defaultArmor, a_sourceArmorAddon, a_sourceContributionMap,
+        resolvedAddon, branchMaskMode));
   }
 }
 

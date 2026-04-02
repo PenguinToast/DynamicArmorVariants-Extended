@@ -53,11 +53,10 @@ auto Settings::Load() -> Settings {
         root.get("installEquipConflictHook", false).asBool();
     settings.useOwnershipBasedArmorMasks =
         root.get("useOwnershipBasedArmorMasks", false).asBool();
-    logger::info(
-        "Loaded settings from {} (installEquipConflictHook={}, "
-        "useOwnershipBasedArmorMasks={})"sv,
-        path.string(), settings.installEquipConflictHook,
-        settings.useOwnershipBasedArmorMasks);
+    logger::info("Loaded settings from {} (installEquipConflictHook={}, "
+                 "useOwnershipBasedArmorMasks={})"sv,
+                 path.string(), settings.installEquipConflictHook,
+                 settings.useOwnershipBasedArmorMasks);
     g_settings = settings;
     return g_settings;
   } catch (const std::exception &a_error) {
