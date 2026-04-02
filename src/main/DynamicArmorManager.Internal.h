@@ -3,6 +3,7 @@
 #include "ArmorAddonResolutionCache.h"
 #include "ArmorVariant.h"
 #include "DynamicArmorManager.Types.h"
+#include "Settings.h"
 
 #include <list>
 #include <optional>
@@ -38,8 +39,6 @@ struct ArmorSlotContributionMap {
 struct DynamicArmorManagerState {
   static constexpr std::uint32_t SerializationVersion = 1;
   static constexpr std::uint32_t SerializationType = 'AAVO';
-  static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
-  static constexpr auto ArmorAddonResolutionCacheTtl = std::chrono::seconds(10);
 
   tsl::ordered_map<std::string, ArmorVariant> variants;
   std::unordered_map<std::string_view, std::vector<const ArmorVariant *>>
@@ -51,8 +50,13 @@ struct DynamicArmorManagerState {
   std::unordered_map<RE::FormID, std::unordered_map<std::string, std::uint64_t>>
       variantOverrides;
   std::uint64_t nextOverrideSequence{1};
+  std::size_t refreshVariantCacheCapacity{
+      Settings::DefaultRefreshVariantCacheCapacity};
+  std::chrono::milliseconds refreshVariantCacheTtl{
+      Settings::DefaultRefreshVariantCacheTtl};
   mutable ArmorAddonResolutionCache armorAddonResolutionCache{
-      ArmorAddonResolutionCacheCapacity, ArmorAddonResolutionCacheTtl};
+      Settings::DefaultRefreshVariantCacheCapacity,
+      Settings::DefaultRefreshVariantCacheTtl};
   mutable std::unordered_map<RE::FormID, ArmorSlotContributionMap>
       armorSlotContributionCache;
   mutable std::shared_mutex mutex;

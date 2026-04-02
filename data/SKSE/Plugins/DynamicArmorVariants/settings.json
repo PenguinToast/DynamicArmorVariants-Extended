@@ -1,4 +1,6 @@
 {
   "installEquipConflictHook": true,
-  "useOwnershipBasedArmorMasks": true
+  "useOwnershipBasedArmorMasks": true,
+  "refreshVariantCacheCapacity": 25000,
+  "refreshVariantCacheTtlMs": 5000
 }

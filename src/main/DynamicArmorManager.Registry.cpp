@@ -25,7 +25,13 @@ auto DynamicArmorManager::GetSingleton() -> DynamicArmorManager * {
 }
 
 DynamicArmorManager::DynamicArmorManager()
-    : state_(std::make_unique<dave::detail::DynamicArmorManagerState>()) {}
+    : state_(std::make_unique<dave::detail::DynamicArmorManagerState>()) {
+  state_->refreshVariantCacheCapacity = Settings::Get().refreshVariantCacheCapacity;
+  state_->refreshVariantCacheTtl = Settings::Get().refreshVariantCacheTtl;
+  state_->armorAddonResolutionCache = ArmorAddonResolutionCache(
+      state_->refreshVariantCacheCapacity,
+      state_->refreshVariantCacheTtl);
+}
 
 DynamicArmorManager::~DynamicArmorManager() = default;
 

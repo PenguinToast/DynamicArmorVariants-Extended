@@ -3,6 +3,7 @@
 #include "Json.h"
 
 #include <fstream>
+#include <limits>
 #include <sstream>
 
 namespace {
@@ -53,10 +54,43 @@ auto Settings::Load() -> Settings {
         root.get("installEquipConflictHook", false).asBool();
     settings.useOwnershipBasedArmorMasks =
         root.get("useOwnershipBasedArmorMasks", false).asBool();
+    if (const auto capacityValue =
+            root.get("refreshVariantCacheCapacity",
+                     static_cast<Json::UInt64>(
+                         Settings::DefaultRefreshVariantCacheCapacity));
+        capacityValue.isUInt64()) {
+      const auto rawCapacity = capacityValue.asUInt64();
+      const auto maxCapacity =
+          static_cast<Json::UInt64>((std::numeric_limits<std::size_t>::max)());
+      settings.refreshVariantCacheCapacity =
+          rawCapacity == 0
+              ? Settings::DefaultRefreshVariantCacheCapacity
+              : static_cast<std::size_t>(rawCapacity > maxCapacity
+                                             ? maxCapacity
+                                             : rawCapacity);
+    }
+    if (const auto ttlValue =
+            root.get("refreshVariantCacheTtlMs",
+                     static_cast<Json::UInt64>(
+                         Settings::DefaultRefreshVariantCacheTtl.count()));
+        ttlValue.isUInt64()) {
+      const auto rawTtl = ttlValue.asUInt64();
+      const auto maxTtl = static_cast<Json::UInt64>(
+          (std::numeric_limits<std::int64_t>::max)());
+      settings.refreshVariantCacheTtl =
+          rawTtl == 0
+              ? Settings::DefaultRefreshVariantCacheTtl
+              : std::chrono::milliseconds(static_cast<std::int64_t>(
+                    rawTtl > maxTtl ? maxTtl : rawTtl));
+    }
     logger::info("Loaded settings from {} (installEquipConflictHook={}, "
-                 "useOwnershipBasedArmorMasks={})"sv,
+                 "useOwnershipBasedArmorMasks={}, "
+                 "refreshVariantCacheCapacity={}, "
+                 "refreshVariantCacheTtlMs={})"sv,
                  path.string(), settings.installEquipConflictHook,
-                 settings.useOwnershipBasedArmorMasks);
+                 settings.useOwnershipBasedArmorMasks,
+                 settings.refreshVariantCacheCapacity,
+                 settings.refreshVariantCacheTtl.count());
     g_settings = settings;
     return g_settings;
   } catch (const std::exception &a_error) {

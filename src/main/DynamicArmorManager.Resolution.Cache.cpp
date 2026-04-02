@@ -153,7 +153,7 @@ auto dave::detail::GetOrBuildVariantCandidatesForAddon(
                   .LruIt = a_state.variantCandidatesLru.begin()});
 
   if (a_state.variantCandidatesByArmorAddon.size() >
-      DynamicArmorManagerState::ArmorAddonResolutionCacheCapacity) {
+      a_state.refreshVariantCacheCapacity) {
     const auto lruFormID = a_state.variantCandidatesLru.back();
     a_state.variantCandidatesByArmorAddon.erase(lruFormID);
     a_state.variantCandidatesLru.pop_back();
