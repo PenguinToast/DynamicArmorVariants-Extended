@@ -1,8 +1,8 @@
 #include "DynamicArmorManager.h"
 #include "DynamicArmorManager.Internal.h"
 
-#include "Ext/InventoryChanges.h"
 #include "Ext/IItemChangeVisitor.h"
+#include "Ext/InventoryChanges.h"
 #include "Ext/TESObjectARMA.h"
 
 #include <array>
@@ -16,9 +16,9 @@ public:
       return 1;
     }
 
-    auto *armor =
-        a_entryData->object ? a_entryData->object->As<RE::TESObjectARMO>()
-                            : nullptr;
+    auto *armor = a_entryData->object
+                      ? a_entryData->object->As<RE::TESObjectARMO>()
+                      : nullptr;
     if (!armor || count_ >= armors_.size()) {
       return 1;
     }
@@ -138,7 +138,8 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
 
   for (auto *armor : equippedArmorVisitor) {
     for (auto *armorAddon : armor->armorAddons) {
-      if (!armorAddon || (race && !Ext::TESObjectARMA::HasRace(armorAddon, race))) {
+      if (!armorAddon ||
+          (race && !Ext::TESObjectARMA::HasRace(armorAddon, race))) {
         continue;
       }
 
@@ -149,8 +150,9 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
       const auto uncachedResolution =
           dave::detail::BuildArmorAddonResolution(state, a_actor, armorAddon);
       const auto activeVariant = uncachedResolution.ActiveVariant;
-      const auto cacheUpdate = state.armorAddonResolutionCache.UpsertIgnoringTtl(
-          key, std::move(uncachedResolution));
+      const auto cacheUpdate =
+          state.armorAddonResolutionCache.UpsertIgnoringTtl(
+              key, std::move(uncachedResolution));
 
       if (!cacheUpdate.HadEntry) {
         stats.Changed = true;

@@ -39,8 +39,7 @@ struct DynamicArmorManagerState {
   static constexpr std::uint32_t SerializationVersion = 1;
   static constexpr std::uint32_t SerializationType = 'AAVO';
   static constexpr std::size_t ArmorAddonResolutionCacheCapacity = 500;
-  static constexpr auto ArmorAddonResolutionCacheTtl =
-      std::chrono::seconds(10);
+  static constexpr auto ArmorAddonResolutionCacheTtl = std::chrono::seconds(10);
 
   tsl::ordered_map<std::string, ArmorVariant> variants;
   std::unordered_map<std::string_view, std::vector<const ArmorVariant *>>
@@ -63,8 +62,8 @@ auto IsVariantOverrideLocked(const DynamicArmorManagerState &a_state,
                              RE::Actor *a_actor, std::string_view a_stateName)
     -> bool;
 auto IsVariantOverrideLocked(const DynamicArmorManagerState &a_state,
-                             RE::Actor *a_actor,
-                             const std::string &a_stateName) -> bool;
+                             RE::Actor *a_actor, const std::string &a_stateName)
+    -> bool;
 auto IsVariantConditionLocked(const DynamicArmorManagerState &a_state,
                               RE::Actor *a_actor, std::string_view a_stateName)
     -> bool;
@@ -87,12 +86,13 @@ auto BuildResolvedCoverageMask(
     ArmorVariant::OverrideOption *a_overrideOption = nullptr)
     -> BipedObjectSlot;
 auto BuildArmorAddonResolution(const DynamicArmorManagerState &a_state,
-                               RE::Actor *a_actor, RE::TESObjectARMA *a_armorAddon)
+                               RE::Actor *a_actor,
+                               RE::TESObjectARMA *a_armorAddon)
     -> ArmorAddonResolutionCache::Value;
 auto HasVariantsLocked(const DynamicArmorManagerState &a_state,
                        RE::TESObjectARMO *a_armor) -> bool;
-auto GetOrBuildVariantCandidatesForAddon(const DynamicArmorManagerState &a_state,
-                                         RE::TESObjectARMA *a_armorAddon)
+auto GetOrBuildVariantCandidatesForAddon(
+    const DynamicArmorManagerState &a_state, RE::TESObjectARMA *a_armorAddon)
     -> const std::vector<VariantCandidateRef> &;
 auto BuildArmorSlotContributionMap(RE::TESObjectARMO *a_armor)
     -> ArmorSlotContributionMap;

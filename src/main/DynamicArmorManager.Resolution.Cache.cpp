@@ -139,18 +139,18 @@ auto dave::detail::GetOrBuildVariantCandidatesForAddon(
   candidates.reserve(a_state.variants.size());
   for (auto &[name, variant] : a_state.variants) {
     if (const auto *addonList = variant.GetAddonList(a_armorAddon); addonList) {
-      candidates.push_back(VariantCandidateRef{
-          .Name = std::addressof(name),
-          .Variant = std::addressof(variant),
-          .AddonList = addonList});
+      candidates.push_back(
+          VariantCandidateRef{.Name = std::addressof(name),
+                              .Variant = std::addressof(variant),
+                              .AddonList = addonList});
     }
   }
 
   a_state.variantCandidatesLru.push_front(formID);
   auto [it, _] = a_state.variantCandidatesByArmorAddon.emplace(
-      formID, VariantCandidateCacheEntry{.Candidates = std::move(candidates),
-                                         .LruIt =
-                                             a_state.variantCandidatesLru.begin()});
+      formID, VariantCandidateCacheEntry{
+                  .Candidates = std::move(candidates),
+                  .LruIt = a_state.variantCandidatesLru.begin()});
 
   if (a_state.variantCandidatesByArmorAddon.size() >
       DynamicArmorManagerState::ArmorAddonResolutionCacheCapacity) {

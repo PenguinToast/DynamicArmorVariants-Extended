@@ -33,8 +33,8 @@ auto ArmorAddonResolutionCache::UpsertIgnoringTtl(Key a_key, Value a_value)
     it->second.Value = std::move(a_value);
     it->second.ExpiresAt = std::chrono::steady_clock::now() + _ttl;
     Touch(a_key, it);
-    return UpsertResult{
-        .HadEntry = true, .PreviousActiveVariant = previousActiveVariant};
+    return UpsertResult{.HadEntry = true,
+                        .PreviousActiveVariant = previousActiveVariant};
   }
 
   _lru.push_front(a_key);
