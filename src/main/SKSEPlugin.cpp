@@ -2,6 +2,7 @@
 #include "DynamicArmorManager.h"
 #include "Hooks.h"
 #include "Papyrus/Papyrus.h"
+#include "RaceMenuCompat.h"
 #include "Serialization.h"
 #include "Settings.h"
 #include "WornFormUpdater.h"
@@ -62,6 +63,9 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   messaging->RegisterListener([](auto a_msg) {
     switch (a_msg->type) {
     case SKSE::MessagingInterface::kPostLoad:
+      if (Settings::Get().installRaceMenuCompatHooks) {
+        RaceMenuCompat::Install();
+      }
       SKSE::GetMessagingInterface()->RegisterListener(
           nullptr, [](SKSE::MessagingInterface::Message *a_message) {
             DynamicArmorVariantsExtendedInterface::HandleInterfaceRequest(

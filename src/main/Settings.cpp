@@ -54,6 +54,8 @@ auto Settings::Load() -> Settings {
         root.get("installEquipConflictHook", false).asBool();
     settings.useOwnershipBasedArmorMasks =
         root.get("useOwnershipBasedArmorMasks", false).asBool();
+    settings.installRaceMenuCompatHooks =
+        root.get("installRaceMenuCompatHooks", false).asBool();
     if (const auto capacityValue =
             root.get("refreshVariantCacheCapacity",
                      static_cast<Json::UInt64>(
@@ -85,10 +87,12 @@ auto Settings::Load() -> Settings {
     }
     logger::info("Loaded settings from {} (installEquipConflictHook={}, "
                  "useOwnershipBasedArmorMasks={}, "
+                 "installRaceMenuCompatHooks={}, "
                  "refreshVariantCacheCapacity={}, "
                  "refreshVariantCacheTtlMs={})"sv,
                  path.string(), settings.installEquipConflictHook,
                  settings.useOwnershipBasedArmorMasks,
+                 settings.installRaceMenuCompatHooks,
                  settings.refreshVariantCacheCapacity,
                  settings.refreshVariantCacheTtl.count());
     g_settings = settings;
@@ -96,14 +100,16 @@ auto Settings::Load() -> Settings {
   } catch (const std::exception &a_error) {
     logger::error(
         "Failed to load settings; equip conflict hook and partial-slot "
-        "resolution will stay disabled: {}"sv,
+        "resolution will stay disabled, and RaceMenu compat hooks will stay "
+        "disabled: {}"sv,
         a_error.what());
     g_settings = settings;
     return g_settings;
   } catch (...) {
     logger::error(
         "Failed to load settings; equip conflict hook and partial-slot "
-        "resolution will stay disabled"sv);
+        "resolution will stay disabled, and RaceMenu compat hooks will stay "
+        "disabled"sv);
     g_settings = settings;
     return g_settings;
   }
