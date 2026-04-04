@@ -11,7 +11,6 @@
 #include <array>
 #include <cstring>
 #include <functional>
-#include <memory>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -40,11 +39,6 @@ struct HookLayout {
   std::uint32_t TimeDateStamp{0};
   HookSite GetSkinFormSite;
   HookSite VisitAllWornItemsSite;
-  HookSite VisitAllWornItemsMatchSite;
-  std::uintptr_t VisitAllWornItemsMatchContinueRva{0};
-  std::uintptr_t VisitAllWornItemsMatchMissRva{0};
-  std::uint8_t VisitAllWornItemsMatchMaskStackOffset{0};
-  std::uint8_t VisitAllWornItemsMatchEntryRegister{0};
   HookSite VisitArmorAddonSite;
 };
 
@@ -57,18 +51,18 @@ constexpr std::array<std::uint8_t, 14> kGetSkinFormPrologue_0419_10{
 constexpr std::array<std::uint8_t, 13> kGetSkinFormPrologue_0419_9{
     0x41, 0x55, 0x41, 0x56, 0x41, 0x57, 0x48,
     0x83, 0xEC, 0x60, 0x4C, 0x8B, 0xE9};
+constexpr std::array<std::uint8_t, 20> kGetSkinFormPrologue_0419_9_Audited{
+    0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x6C, 0x24, 0x10,
+    0x48, 0x89, 0x74, 0x24, 0x18, 0x48, 0x89, 0x7C, 0x24, 0x20};
+constexpr std::array<std::uint8_t, 13> kGetSkinFormPrologue_0419_10_Audited{
+    0x48, 0x89, 0x5C, 0x24, 0x08, 0x57, 0x48,
+    0x83, 0xEC, 0x30, 0x48, 0x8B, 0xF9};
 constexpr std::array<std::uint8_t, 15> kGetSkinFormPrologue_0345_SE{
     0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x6C,
     0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18};
 constexpr std::array<std::uint8_t, 13> kGetSkinFormPrologue_0345_VR{
     0x48, 0x89, 0x5C, 0x24, 0x18, 0x55, 0x48,
     0x83, 0xEC, 0x60, 0x48, 0x8B, 0xE9};
-
-enum : std::uint8_t {
-  kEntryRegisterRsi = 1,
-  kEntryRegisterRdi = 2,
-  kEntryRegisterR15 = 3,
-};
 
 constexpr std::array<std::uint8_t, 14> kVisitAllWornItemsPrologue_0345_VR{
     0x48, 0x89, 0x5C, 0x24, 0x10, 0x55, 0x56,
@@ -92,21 +86,9 @@ constexpr std::array<std::uint8_t, 12> kVisitAllWornItemsPrologue_0419_15{
     0x48, 0x89, 0x5C, 0x24, 0x10, 0x55,
     0x56, 0x57, 0x41, 0x54, 0x41, 0x55};
 
-constexpr std::array<std::uint8_t, 19> kVisitAllWornItemsMatchPrologue_0345_VR{
-    0x48, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x40, 0x48, 0x8B,
-    0x44, 0x24, 0x40, 0xFF, 0x10, 0x84, 0xC0, 0x74, 0x43};
-constexpr std::array<std::uint8_t, 23> kVisitAllWornItemsMatchPrologue_0345_SE{
-    0x49, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x28, 0x48, 0x8B,
-    0x44, 0x24, 0x28, 0xFF, 0x10, 0x84, 0xC0, 0x0F, 0x84, 0xD5,
-    0x00, 0x00, 0x00};
-constexpr std::array<std::uint8_t, 23> kVisitAllWornItemsMatchPrologue_0419_9{
-    0x49, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x28, 0x48, 0x8B,
-    0x44, 0x24, 0x28, 0xFF, 0x10, 0x84, 0xC0, 0x0F, 0x84, 0xD5,
-    0x00, 0x00, 0x00};
-constexpr std::array<std::uint8_t, 19> kVisitAllWornItemsMatchPrologue_0419_15{
-    0x48, 0x8B, 0x44, 0x24, 0x48, 0x48, 0x8B, 0x16, 0x48, 0x8D,
-    0x4C, 0x24, 0x48, 0xFF, 0x10, 0x84, 0xC0, 0x74, 0x50};
-
+constexpr std::array<std::uint8_t, 21> kVisitArmorAddonPrologue_0419_9{
+    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56,
+    0x41, 0x57, 0x48, 0x8D, 0xAC, 0x24, 0x98, 0xFE, 0xFF, 0xFF};
 constexpr std::array<std::uint8_t, 19> kVisitArmorAddonPrologue_New_0419_13{
     0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54,
     0x41, 0x56, 0x41, 0x57, 0x48, 0x8D, 0xAC,
@@ -118,6 +100,9 @@ constexpr std::array<std::uint8_t, 19> kVisitArmorAddonPrologue_New_0419_15{
 constexpr std::array<std::uint8_t, 12> kVisitArmorAddonPrologue_Old{
     0x48, 0x89, 0x5C, 0x24, 0x20, 0x55,
     0x56, 0x57, 0x48, 0x83, 0xEC, 0x60};
+constexpr std::array<std::uint8_t, 20> kVisitArmorAddonPrologue_SE_0416{
+    0x40, 0x53, 0x55, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41,
+    0x56, 0x41, 0x57, 0x48, 0x81, 0xEC, 0xC8, 0x01, 0x00, 0x00};
 constexpr auto MakeSite(std::string_view a_name, std::uintptr_t a_rva,
                         std::size_t a_patchSize,
                         std::span<const std::uint8_t> a_prologue) -> HookSite {
@@ -140,16 +125,9 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x000CE5C0, 14,
                      kVisitAllWornItemsPrologue_0345_VR),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000CE6E5, 19,
-                     kVisitAllWornItemsMatchPrologue_0345_VR),
-        .VisitAllWornItemsMatchContinueRva = 0x000CE6F8,
-        .VisitAllWornItemsMatchMissRva = 0x000CE73B,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x48,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterRdi,
         .VisitArmorAddonSite =
-            MakeSite("OverrideInterface::VisitArmorAddon", 0x0007B410, 12,
-                     kVisitArmorAddonPrologue_Old),
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x000CE900, 20,
+                     kVisitArmorAddonPrologue_SE_0416),
     },
     HookLayout{
         .Label = "RaceMenu SE 0.4.16"sv,
@@ -161,97 +139,62 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x000D1EB0, 12,
                      kVisitAllWornItemsPrologue_0345_SE),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000D1F39, 23,
-                     kVisitAllWornItemsMatchPrologue_0345_SE),
-        .VisitAllWornItemsMatchContinueRva = 0x000D1F50,
-        .VisitAllWornItemsMatchMissRva = 0x000D2025,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
-            MakeSite("OverrideInterface::VisitArmorAddon", 0x0007E480, 12,
-                     kVisitArmorAddonPrologue_Old),
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x000D2410, 20,
+                     kVisitArmorAddonPrologue_SE_0416),
     },
     HookLayout{
         .Label = "RaceMenu AE 0.4.19.9"sv,
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 9},
         .TimeDateStamp = 0x61D8DC73,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007A134, 13,
-                                    kGetSkinFormPrologue_0419_9),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007A120, 20,
+                                    kGetSkinFormPrologue_0419_9_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007A340, 12,
                      kVisitAllWornItemsPrologue_0419_9),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007A3C9, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007A3E0,
-        .VisitAllWornItemsMatchMissRva = 0x0007A4B5,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
-            MakeSite("OverrideInterface::VisitArmorAddon", 0x00084510, 12,
-                     kVisitArmorAddonPrologue_Old),
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x0007A830, 21,
+                     kVisitArmorAddonPrologue_0419_9),
     },
     HookLayout{
         .Label = "RaceMenu AE 0.4.19.10"sv,
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 10},
         .TimeDateStamp = 0x62B5048B,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007B0FA, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007B060, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007B2A0, 12,
                      kVisitAllWornItemsPrologue_0419_9),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B329, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007B340,
-        .VisitAllWornItemsMatchMissRva = 0x0007B415,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
-            MakeSite("OverrideInterface::VisitArmorAddon", 0x000877E0, 12,
-                     kVisitArmorAddonPrologue_Old),
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x0007B9A0, 19,
+                     kVisitArmorAddonPrologue_New_0419_13),
     },
     HookLayout{
         .Label = "RaceMenu AE 0.4.19.11"sv,
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 11},
         .TimeDateStamp = 0x62C5F183,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007B17A, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007B0E0, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007B320, 12,
                      kVisitAllWornItemsPrologue_0419_9),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B3A9, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007B3C0,
-        .VisitAllWornItemsMatchMissRva = 0x0007B495,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
-            MakeSite("OverrideInterface::VisitArmorAddon", 0x00087860, 12,
-                     kVisitArmorAddonPrologue_Old),
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x0007BA20, 19,
+                     kVisitArmorAddonPrologue_New_0419_13),
     },
     HookLayout{
         .Label = "RaceMenu AE 0.4.19.13"sv,
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 13},
         .TimeDateStamp = 0x63323917,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E84A, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E7B0, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007EA00, 13,
                      kVisitAllWornItemsPrologue_0419_13_AE),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA79, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007EA90,
-        .VisitAllWornItemsMatchMissRva = 0x0007EB65,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0F0, 19,
                      kVisitArmorAddonPrologue_New_0419_13),
@@ -261,18 +204,11 @@ constexpr std::array kHookLayouts{
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 13},
         .TimeDateStamp = 0x634CAD62,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E82A, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E790, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007E9E0, 13,
                      kVisitAllWornItemsPrologue_0419_13_GOG),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007EA70,
-        .VisitAllWornItemsMatchMissRva = 0x0007EB45,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0D0, 19,
                      kVisitArmorAddonPrologue_New_0419_13),
@@ -282,18 +218,11 @@ constexpr std::array kHookLayouts{
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 14},
         .TimeDateStamp = 0x635C6697,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E82A, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E790, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007E9E0, 13,
                      kVisitAllWornItemsPrologue_0419_13_GOG),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007EA70,
-        .VisitAllWornItemsMatchMissRva = 0x0007EB45,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0D0, 19,
                      kVisitArmorAddonPrologue_New_0419_13),
@@ -303,18 +232,11 @@ constexpr std::array kHookLayouts{
         .ModuleName = kSkee64ModuleName,
         .Version = REL::Version{0, 4, 19, 14},
         .TimeDateStamp = 0x63B34B30,
-        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E92A, 14,
-                                    kGetSkinFormPrologue_0419_10),
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E890, 13,
+                                    kGetSkinFormPrologue_0419_10_Audited),
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x0007EAE0, 13,
                      kVisitAllWornItemsPrologue_0419_14_GOG),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EB59, 23,
-                     kVisitAllWornItemsMatchPrologue_0419_9),
-        .VisitAllWornItemsMatchContinueRva = 0x0007EB70,
-        .VisitAllWornItemsMatchMissRva = 0x0007EC45,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterR15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F1D0, 19,
                      kVisitArmorAddonPrologue_New_0419_13),
@@ -329,13 +251,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x000C2B10, 12,
                      kVisitAllWornItemsPrologue_0419_15),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 19,
-                     kVisitAllWornItemsMatchPrologue_0419_15),
-        .VisitAllWornItemsMatchContinueRva = 0x000C2C44,
-        .VisitAllWornItemsMatchMissRva = 0x000C2C94,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x50,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterRsi,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000C2F60, 19,
                      kVisitArmorAddonPrologue_New_0419_15),
@@ -350,13 +265,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSite =
             MakeSite("NifUtils::VisitAllWornItems", 0x000C2B10, 12,
                      kVisitAllWornItemsPrologue_0419_15),
-        .VisitAllWornItemsMatchSite =
-            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 19,
-                     kVisitAllWornItemsMatchPrologue_0419_15),
-        .VisitAllWornItemsMatchContinueRva = 0x000C2C44,
-        .VisitAllWornItemsMatchMissRva = 0x000C2C94,
-        .VisitAllWornItemsMatchMaskStackOffset = 0x50,
-        .VisitAllWornItemsMatchEntryRegister = kEntryRegisterRsi,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000C2F60, 19,
                      kVisitArmorAddonPrologue_New_0419_15),
@@ -366,31 +274,9 @@ constexpr std::array kHookLayouts{
 using VisitArmorAddonFunc =
     void(RE::Actor *, RE::TESObjectARMO *, RE::TESObjectARMA *,
          std::function<void(bool, RE::NiNode *, RE::NiAVObject *)>);
-using VisitAllWornItemsFunc =
-    void(RE::Actor *, std::uint32_t,
-         std::function<void(RE::InventoryEntryData *)>);
 
 bool g_installed{false};
 VisitArmorAddonFunc *g_originalVisitArmorAddon{nullptr};
-VisitAllWornItemsFunc *g_originalVisitAllWornItems{nullptr};
-thread_local RE::Actor *g_currentVisitAllWornItemsActor{nullptr};
-
-struct ScopedVisitAllWornItemsActor final {
-  explicit ScopedVisitAllWornItemsActor(RE::Actor *a_actor)
-      : previous(g_currentVisitAllWornItemsActor) {
-    g_currentVisitAllWornItemsActor = a_actor;
-  }
-
-  ~ScopedVisitAllWornItemsActor() {
-    g_currentVisitAllWornItemsActor = previous;
-  }
-
-  ScopedVisitAllWornItemsActor(const ScopedVisitAllWornItemsActor &) = delete;
-  auto operator=(const ScopedVisitAllWornItemsActor &)
-      -> ScopedVisitAllWornItemsActor & = delete;
-
-  RE::Actor *previous{nullptr};
-};
 
 auto MatchesOriginalSlotMask(RE::TESForm *a_form, std::uint32_t a_mask) -> bool;
 void Hook_VisitAllWornItems(
@@ -402,8 +288,6 @@ void Hook_VisitArmorAddon(
     std::function<void(bool, RE::NiNode *, RE::NiAVObject *)> a_functor);
 auto ShouldVisitAllWornItem(RE::Actor *a_actor, std::uint32_t a_mask,
                             RE::InventoryEntryData *a_entryData) -> bool;
-auto ShouldVisitAllWornItemForCurrentActor(
-    std::uint32_t a_mask, RE::InventoryEntryData *a_entryData) -> bool;
 auto CollectResolvedArmorAddonPairs(RE::Actor *a_actor, RE::TESObjectARMO *a_armor,
                                     RE::TESObjectARMA *a_armorAddon)
     -> std::vector<std::pair<RE::TESObjectARMO *, RE::TESObjectARMA *>>;
@@ -447,11 +331,31 @@ auto ShouldVisitAllWornItem(RE::Actor *a_actor, std::uint32_t a_mask,
   return MatchesOriginalSlotMask(a_entryData->object, a_mask);
 }
 
-auto ShouldVisitAllWornItemForCurrentActor(
-    const std::uint32_t a_mask, RE::InventoryEntryData *a_entryData) -> bool {
-  return ShouldVisitAllWornItem(g_currentVisitAllWornItemsActor, a_mask,
-                                a_entryData);
-}
+class VisitAllWornItemsReplacementVisitor final : public Ext::IItemChangeVisitor {
+public:
+  VisitAllWornItemsReplacementVisitor(
+      RE::Actor *a_actor, const std::uint32_t a_mask,
+      std::function<void(RE::InventoryEntryData *)> &a_functor)
+      : actor(a_actor), mask(a_mask), functor(a_functor) {}
+
+  std::uint32_t Visit(RE::InventoryEntryData *a_entryData) override {
+    if (!a_entryData || !a_entryData->IsWorn()) {
+      return 1;
+    }
+
+    if (!ShouldVisitAllWornItem(actor, mask, a_entryData)) {
+      return 1;
+    }
+
+    functor(a_entryData);
+    return 1;
+  }
+
+private:
+  RE::Actor *actor{nullptr};
+  std::uint32_t mask{0};
+  std::function<void(RE::InventoryEntryData *)> &functor;
+};
 
 auto GetWornArmor(RE::InventoryEntryData *a_entryData) -> RE::TESObjectARMO * {
   if (!a_entryData || !GetWornExtraData(a_entryData)) {
@@ -595,12 +499,17 @@ auto Hook_GetSkinForm(RE::Actor *a_actor, std::uint32_t a_mask)
 void Hook_VisitAllWornItems(
     RE::Actor *a_actor, std::uint32_t a_mask,
     std::function<void(RE::InventoryEntryData *)> a_functor) {
-  if (!g_originalVisitAllWornItems) {
+  if (!a_actor || !a_functor || a_mask == 0) {
     return;
   }
 
-  const ScopedVisitAllWornItemsActor actorScope{a_actor};
-  g_originalVisitAllWornItems(a_actor, a_mask, std::move(a_functor));
+  auto *inventory = a_actor->GetInventoryChanges();
+  if (!inventory) {
+    return;
+  }
+
+  VisitAllWornItemsReplacementVisitor visitor{a_actor, a_mask, a_functor};
+  Ext::InventoryChanges::Accept(inventory, std::addressof(visitor));
 }
 
 auto CollectResolvedArmorAddonPairs(RE::Actor *a_actor, RE::TESObjectARMO *a_armor,
@@ -643,10 +552,10 @@ void Hook_VisitArmorAddon(
   // current hooks are enough for the Wet Function path we verified, but a niche
   // future case could still be blocked if the source ARMA mask does not match
   // while the resolved DAVE visual ARMA should. If that ever matters, patch
-  // that internal IsSlotMatch decision the same way we patch
-  // VisitAllWornItems::MatchBySlot below.
+  // that internal IsSlotMatch decision directly too.
   auto resolvedPairs =
       CollectResolvedArmorAddonPairs(a_actor, a_armor, a_armorAddon);
+
   if (resolvedPairs.empty()) {
     g_originalVisitArmorAddon(a_actor, a_armor, a_armorAddon,
                               std::move(a_functor));
@@ -710,75 +619,6 @@ auto CreateOriginalTrampoline(const std::uintptr_t a_address,
   std::memcpy(jump.data() + 2, &returnAddress, sizeof(returnAddress));
   std::memcpy(memory + a_patchSize, jump.data(), jump.size());
   return reinterpret_cast<std::uintptr_t>(memory);
-}
-
-void InstallVisitAllWornItemsMatchPatch(const std::uintptr_t a_moduleBase,
-                                        const HookLayout &a_layout) {
-  if (a_layout.VisitAllWornItemsMatchSite.Rva == 0 ||
-      a_layout.VisitAllWornItemsMatchContinueRva == 0 ||
-      a_layout.VisitAllWornItemsMatchMissRva == 0) {
-    return;
-  }
-
-  const auto siteAddress =
-      ResolveHookAddress(a_moduleBase, a_layout.VisitAllWornItemsMatchSite);
-  const auto continueAddress =
-      a_moduleBase + a_layout.VisitAllWornItemsMatchContinueRva;
-  const auto missAddress = a_moduleBase + a_layout.VisitAllWornItemsMatchMissRva;
-  const auto maskStackOffset = a_layout.VisitAllWornItemsMatchMaskStackOffset;
-  const auto entryRegister = a_layout.VisitAllWornItemsMatchEntryRegister;
-
-  struct VisitAllWornItemsMatchPatch final : Xbyak::CodeGenerator {
-    VisitAllWornItemsMatchPatch(const std::uintptr_t a_helper,
-                                const std::uint8_t a_maskStackOffset,
-                                const std::uint8_t a_entryRegister,
-                                const std::uintptr_t a_continueAddress,
-                                const std::uintptr_t a_missAddress) {
-      mov(ecx, dword[rsp + a_maskStackOffset]);
-
-      switch (a_entryRegister) {
-      case kEntryRegisterRsi:
-        mov(rdx, rsi);
-        break;
-      case kEntryRegisterRdi:
-        mov(rdx, rdi);
-        break;
-      case kEntryRegisterR15:
-        mov(rdx, r15);
-        break;
-      default:
-        util::report_and_fail(
-            "RaceMenu compat unsupported VisitAllWornItems entry register"sv);
-      }
-
-      sub(rsp, 0x20);
-      mov(rax, a_helper);
-      call(rax);
-      add(rsp, 0x20);
-      test(al, al);
-
-      Xbyak::Label miss;
-      je(miss);
-
-      mov(rax, a_continueAddress);
-      jmp(rax);
-
-      L(miss);
-      mov(rax, a_missAddress);
-      jmp(rax);
-    }
-  };
-
-  static std::vector<std::unique_ptr<VisitAllWornItemsMatchPatch>> s_patches;
-  auto patch = std::make_unique<VisitAllWornItemsMatchPatch>(
-      reinterpret_cast<std::uintptr_t>(&ShouldVisitAllWornItemForCurrentActor),
-      maskStackOffset, entryRegister, continueAddress, missAddress);
-  patch->ready();
-
-  WriteAbsoluteJump(siteAddress, reinterpret_cast<std::uintptr_t>(patch->getCode()),
-                    a_layout.VisitAllWornItemsMatchSite.PatchSize,
-                    a_layout.VisitAllWornItemsMatchSite.Prologue);
-  s_patches.push_back(std::move(patch));
 }
 
 auto ValidateHookSite(const std::uintptr_t a_moduleBase, const HookSite &a_site)
@@ -970,15 +810,13 @@ void RaceMenuCompat::Install() {
 
   if (!ValidateHookSite(moduleBase, layout->GetSkinFormSite) ||
       !ValidateHookSite(moduleBase, layout->VisitAllWornItemsSite) ||
-      !ValidateHookSite(moduleBase, layout->VisitAllWornItemsMatchSite) ||
       !ValidateHookSite(moduleBase, layout->VisitArmorAddonSite)) {
     return;
   }
 
   InstallAbsoluteJumpHook(moduleBase, layout->GetSkinFormSite, &Hook_GetSkinForm);
-  g_originalVisitAllWornItems = InstallTrampolineHook<VisitAllWornItemsFunc>(
-      moduleBase, layout->VisitAllWornItemsSite, &Hook_VisitAllWornItems);
-  InstallVisitAllWornItemsMatchPatch(moduleBase, *layout);
+  InstallAbsoluteJumpHook(moduleBase, layout->VisitAllWornItemsSite,
+                          &Hook_VisitAllWornItems);
   g_originalVisitArmorAddon = InstallTrampolineHook<VisitArmorAddonFunc>(
       moduleBase, layout->VisitArmorAddonSite, &Hook_VisitArmorAddon);
   g_installed = true;
