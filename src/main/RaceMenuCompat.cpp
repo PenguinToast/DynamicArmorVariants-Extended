@@ -375,6 +375,23 @@ VisitArmorAddonFunc *g_originalVisitArmorAddon{nullptr};
 VisitAllWornItemsFunc *g_originalVisitAllWornItems{nullptr};
 thread_local RE::Actor *g_currentVisitAllWornItemsActor{nullptr};
 
+struct ScopedVisitAllWornItemsActor final {
+  explicit ScopedVisitAllWornItemsActor(RE::Actor *a_actor)
+      : previous(g_currentVisitAllWornItemsActor) {
+    g_currentVisitAllWornItemsActor = a_actor;
+  }
+
+  ~ScopedVisitAllWornItemsActor() {
+    g_currentVisitAllWornItemsActor = previous;
+  }
+
+  ScopedVisitAllWornItemsActor(const ScopedVisitAllWornItemsActor &) = delete;
+  auto operator=(const ScopedVisitAllWornItemsActor &)
+      -> ScopedVisitAllWornItemsActor & = delete;
+
+  RE::Actor *previous{nullptr};
+};
+
 auto MatchesOriginalSlotMask(RE::TESForm *a_form, std::uint32_t a_mask) -> bool;
 void Hook_VisitAllWornItems(
     RE::Actor *a_actor, std::uint32_t a_mask,
@@ -582,10 +599,8 @@ void Hook_VisitAllWornItems(
     return;
   }
 
-  auto *previousActor = g_currentVisitAllWornItemsActor;
-  g_currentVisitAllWornItemsActor = a_actor;
+  const ScopedVisitAllWornItemsActor actorScope{a_actor};
   g_originalVisitAllWornItems(a_actor, a_mask, std::move(a_functor));
-  g_currentVisitAllWornItemsActor = previousActor;
 }
 
 auto CollectResolvedArmorAddonPairs(RE::Actor *a_actor, RE::TESObjectARMO *a_armor,
