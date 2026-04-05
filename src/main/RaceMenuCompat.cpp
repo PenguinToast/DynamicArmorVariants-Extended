@@ -70,21 +70,17 @@ auto CreateOriginalTrampoline(const std::uintptr_t a_address,
 
 void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
                                             const HookLayout &a_layout) {
-  if (a_layout.VisitAllWornItemsSlotMatchSite.Rva == 0 ||
-      a_layout.VisitAllWornItemsSlotMatchContinueRva == 0 ||
-      a_layout.VisitAllWornItemsSlotMatchMissRva == 0) {
+  if (a_layout.VisitAllWornItemsSlotMatchSite.Rva == 0) {
     return;
   }
 
-  // Patch only the slot-match decision inside RaceMenu's VisitAllWornItems so
-  // the original function body and std::function callback invocation stay in
-  // skee, while DAVE controls the effective slot test.
+  // Patch only the predicate call inside RaceMenu's VisitAllWornItems and
+  // return to the original test/jcc block. The trailing branch bytes are also
+  // used as the loop latch after advancing rbx, so they must remain intact.
   const auto siteAddress =
       ResolveHookAddress(a_moduleBase, a_layout.VisitAllWornItemsSlotMatchSite);
-  const auto continueAddress =
-      a_moduleBase + a_layout.VisitAllWornItemsSlotMatchContinueRva;
-  const auto missAddress =
-      a_moduleBase + a_layout.VisitAllWornItemsSlotMatchMissRva;
+  const auto resumeAddress =
+      siteAddress + a_layout.VisitAllWornItemsSlotMatchSite.PatchSize;
   const auto maskStackOffset =
       a_layout.VisitAllWornItemsSlotMatchMaskStackOffset;
   const auto entryRegister =
@@ -94,8 +90,7 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
     VisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_helper,
                                     const std::uint8_t a_maskStackOffset,
                                     const HookLayout::EntryRegister a_entryRegister,
-                                    const std::uintptr_t a_continueAddress,
-                                    const std::uintptr_t a_missAddress) {
+                                    const std::uintptr_t a_resumeAddress) {
       mov(ecx, dword[rsp + a_maskStackOffset]);
 
       switch (a_entryRegister) {
@@ -117,16 +112,7 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
       mov(rax, a_helper);
       call(rax);
       add(rsp, 0x20);
-      test(al, al);
-
-      Xbyak::Label miss;
-      je(miss);
-
-      mov(rax, a_continueAddress);
-      jmp(rax);
-
-      L(miss);
-      mov(rax, a_missAddress);
+      mov(rax, a_resumeAddress);
       jmp(rax);
     }
   };
@@ -134,7 +120,7 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
   static std::vector<std::unique_ptr<VisitAllWornItemsSlotMatchPatch>> s_patches;
   auto patch = std::make_unique<VisitAllWornItemsSlotMatchPatch>(
       reinterpret_cast<std::uintptr_t>(&DoesCurrentVisitItemMatchSlotMask),
-      maskStackOffset, entryRegister, continueAddress, missAddress);
+      maskStackOffset, entryRegister, resumeAddress);
   patch->ready();
 
   WriteAbsoluteJump(siteAddress, reinterpret_cast<std::uintptr_t>(patch->getCode()),
