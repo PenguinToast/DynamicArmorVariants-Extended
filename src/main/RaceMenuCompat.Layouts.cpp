@@ -48,6 +48,9 @@ constexpr std::array<std::uint8_t, 13> kVisitAllWornItemsPrologue_0419_13_GOG{
 constexpr std::array<std::uint8_t, 13> kVisitAllWornItemsPrologue_0419_14_GOG{
     0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48,
     0x8B, 0x05, 0x4B, 0xE0, 0x14, 0x00};
+constexpr std::array<std::uint8_t, 22> kVisitAllWornItemsPrologue_0419_13_Entry{
+    0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x6C, 0x24, 0x20, 0x56,
+    0x57, 0x41, 0x55, 0x41, 0x56, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50};
 constexpr std::array<std::uint8_t, 12> kVisitAllWornItemsPrologue_0419_15{
     0x48, 0x89, 0x5C, 0x24, 0x10, 0x55,
     0x56, 0x57, 0x41, 0x54, 0x41, 0x55};
@@ -211,8 +214,8 @@ constexpr std::array kHookLayouts{
         .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E7B0, 13,
                                     kGetSkinFormPrologue_0419_10),
         .VisitAllWornItemsSite =
-            MakeSite("NifUtils::VisitAllWornItems", 0x0007EA00, 13,
-                     kVisitAllWornItemsPrologue_0419_13_AE),
+            MakeSite("NifUtils::VisitAllWornItems", 0x0007E9F0, 22,
+                     kVisitAllWornItemsPrologue_0419_13_Entry),
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA79, 23,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
@@ -232,8 +235,8 @@ constexpr std::array kHookLayouts{
         .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E790, 13,
                                     kGetSkinFormPrologue_0419_10),
         .VisitAllWornItemsSite =
-            MakeSite("NifUtils::VisitAllWornItems", 0x0007E9E0, 13,
-                     kVisitAllWornItemsPrologue_0419_13_GOG),
+            MakeSite("NifUtils::VisitAllWornItems", 0x0007E9D0, 22,
+                     kVisitAllWornItemsPrologue_0419_13_Entry),
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 23,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
@@ -253,8 +256,8 @@ constexpr std::array kHookLayouts{
         .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E790, 13,
                                     kGetSkinFormPrologue_0419_10),
         .VisitAllWornItemsSite =
-            MakeSite("NifUtils::VisitAllWornItems", 0x0007E9E0, 13,
-                     kVisitAllWornItemsPrologue_0419_13_GOG),
+            MakeSite("NifUtils::VisitAllWornItems", 0x0007E9D0, 22,
+                     kVisitAllWornItemsPrologue_0419_13_Entry),
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 23,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
@@ -274,8 +277,8 @@ constexpr std::array kHookLayouts{
         .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x0007E890, 13,
                                     kGetSkinFormPrologue_0419_10),
         .VisitAllWornItemsSite =
-            MakeSite("NifUtils::VisitAllWornItems", 0x0007EAE0, 13,
-                     kVisitAllWornItemsPrologue_0419_14_GOG),
+            MakeSite("NifUtils::VisitAllWornItems", 0x0007EAD0, 22,
+                     kVisitAllWornItemsPrologue_0419_13_Entry),
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EB59, 23,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
