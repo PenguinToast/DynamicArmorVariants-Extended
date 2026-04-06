@@ -111,8 +111,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000CE6E5, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0345_VR),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x000CE6F8,
-        .VisitAllWornItemsSlotMatchMissRva = 0x000CE73B,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x48,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rdi,
         .VisitArmorAddonSite =
@@ -132,8 +130,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000D1F39, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0345_SE),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x000D1F50,
-        .VisitAllWornItemsSlotMatchMissRva = 0x000D2025,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -153,8 +149,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007A3C9, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007A3E0,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007A4B5,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -174,8 +168,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B329, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007B340,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007B415,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -195,8 +187,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B3A9, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007B3C0,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007B495,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -216,8 +206,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA79, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007EA90,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007EB65,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -237,8 +225,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007EA70,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007EB45,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -258,8 +244,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007EA70,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007EB45,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -279,8 +263,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EB59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x0007EB70,
-        .VisitAllWornItemsSlotMatchMissRva = 0x0007EC45,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
@@ -300,8 +282,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_15),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x000C2C44,
-        .VisitAllWornItemsSlotMatchMissRva = 0x000C2C94,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x50,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rsi,
         .VisitArmorAddonSite =
@@ -321,8 +301,6 @@ constexpr std::array kHookLayouts{
         .VisitAllWornItemsSlotMatchSite =
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_15),
-        .VisitAllWornItemsSlotMatchContinueRva = 0x000C2C44,
-        .VisitAllWornItemsSlotMatchMissRva = 0x000C2C94,
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x50,
         .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rsi,
         .VisitArmorAddonSite =

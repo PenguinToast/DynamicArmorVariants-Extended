@@ -23,8 +23,6 @@ struct HookLayout {
   HookSite GetSkinFormSite;
   HookSite VisitAllWornItemsSite;
   HookSite VisitAllWornItemsSlotMatchSite;
-  std::uintptr_t VisitAllWornItemsSlotMatchContinueRva{0};
-  std::uintptr_t VisitAllWornItemsSlotMatchMissRva{0};
   std::uint8_t VisitAllWornItemsSlotMatchMaskStackOffset{0};
   enum class EntryRegister : std::uint8_t {
     Rsi = 1,

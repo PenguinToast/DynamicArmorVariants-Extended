@@ -183,6 +183,53 @@ Important detail:
   current actor in thread-local storage
 - the actual selection logic happens in the internal matcher patch
 
+AE `0.4.19.16` disassembly detail:
+
+```asm
+1800c2c15  mov [rsp+0x48], rax   ; matcher vptr
+1800c2c1a  mov [rsp+0x50], ebx   ; matcher.mask
+...
+1800c2c31  mov rax, [rsp+0x48]
+1800c2c36  mov rdx, [rsi]
+1800c2c39  lea rcx, [rsp+0x48]
+1800c2c3e  call qword ptr [rax]  ; matcher.Matches(form)
+1800c2c40  test al, al
+1800c2c42  je  1800c2c94
+```
+
+That means the patch site is not an inline compare. It is a virtual predicate
+call on a tiny stack-local `MatchBySlot` object.
+
+Important correction from the April 5, 2026 debugger session:
+
+- the original `test al, al; je ...` bytes after the predicate call must remain
+  intact
+- on AE `0.4.19.16`, later loop code jumps back into that `je` as a latch after
+  advancing `rbx`
+- our old 19-byte patch erased that branch and caused a null `rbx` fallthrough
+  to `mov rdi, [rbx]`
+- the fixed patch now replaces only the predicate-call setup/call bytes and
+  resumes at the original `test/jcc`
+
+This was verified across the current supported DLL set:
+
+- VR `0.4.14`
+- SE `0.4.16`
+- AE `0.4.19.9`
+- AE `0.4.19.10`
+- AE `0.4.19.11`
+- AE/GOG `0.4.19.13`
+- AE/GOG `0.4.19.14`
+- AE `0.4.19.15`
+- AE `0.4.19.16`
+
+All of those builds use the same relevant structure:
+
+- one 15-byte predicate-call region
+- trailing `test al, al; jcc miss`
+- later loop code jumps back into that branch rather than branching directly to
+  the miss label
+
 ### 3. `VisitArmorAddon` hook
 
 Purpose:
@@ -253,6 +300,28 @@ Rejected because:
 - unstable in current testing
 - hard to reason about at the callback/ABI seam
 - unnecessary once the internal matcher patch worked
+
+### Swap out the stack-local `MatchBySlot` object
+
+Considered after disassembling AE `0.4.19.16`.
+
+Why it looked attractive:
+
+- source and binary both show that `VisitAllWornItems` builds a small
+  stack-local matcher object and calls it virtually
+- in theory, replacing that object would be a cleaner abstraction than
+  replacing the call site
+
+Rejected for now because:
+
+- the matcher is not constructed through one clean constructor call; the object
+  is assembled directly into stack storage
+- replacing it safely would require owning the exact `FormMatcher` object ABI
+  and vtable contract for each supported RaceMenu build
+- that is narrower than patching `MatchBySlot::Matches` globally, but still
+  more brittle than the current fix
+- the current patch shape is now instruction-correct: it replaces only the
+  predicate call and preserves RaceMenu's original branch/latch structure
 
 ### Whole-function `VisitEquippedNodes` replacement
 
@@ -388,4 +457,3 @@ If RaceMenu compatibility breaks again:
    original function owns callback invocation.
 4. Treat any attempt to fully replace `VisitAllWornItems` as experimental and
    high-risk.
-
