@@ -1,6 +1,7 @@
 #include "ConfigLoader.h"
 #include "DynamicArmorManager.h"
 #include "Hooks.h"
+#include "LogUtil.h"
 #include "Papyrus/Papyrus.h"
 #include "RaceMenuCompat.h"
 #include "Serialization.h"
@@ -65,6 +66,8 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
     case SKSE::MessagingInterface::kPostLoad:
       if (Settings::Get().installRaceMenuCompatHooks) {
         RaceMenuCompat::Install();
+      } else {
+        LogUtil::LogHookSkipped("RaceMenu compat"sv, "disabled by settings"sv);
       }
       SKSE::GetMessagingInterface()->RegisterListener(
           nullptr, [](SKSE::MessagingInterface::Message *a_message) {

@@ -1,10 +1,12 @@
 #include "RaceMenuCompat.h"
 
+#include "LogUtil.h"
 #include "RaceMenuCompat.Layouts.h"
 #include "RaceMenuCompatInternal.h"
 
 #include <array>
 #include <cstring>
+#include <format>
 #include <memory>
 #include <span>
 #include <string_view>
@@ -139,8 +141,11 @@ auto ValidateHookSite(const std::uintptr_t a_moduleBase, const HookSite &a_site)
     return true;
   }
 
-  logger::warn("RaceMenu compat skipped; {} prologue mismatch at {:X}"sv,
-               a_site.Name, ResolveHookAddress(a_moduleBase, a_site));
+  LogUtil::LogHookSkipped(
+      "RaceMenu compat"sv,
+      std::format("{} prologue mismatch at {:X}", a_site.Name,
+                  ResolveHookAddress(a_moduleBase, a_site)),
+      spdlog::level::warn);
   return false;
 }
 
@@ -189,33 +194,41 @@ void RaceMenuCompat::Install() {
 
   const auto [module, moduleName] = detail::FindLoadedSkeeModule();
   if (!module) {
-    logger::info("RaceMenu compat skipped; RaceMenu module not loaded"sv);
+    LogUtil::LogHookSkipped("RaceMenu compat"sv,
+                            "RaceMenu module not loaded"sv);
     return;
   }
 
   const auto moduleBase = reinterpret_cast<std::uintptr_t>(module);
   const auto version = detail::ReadModuleVersion(module);
   if (!version) {
-    logger::warn("RaceMenu compat skipped; failed to read version from {}"sv,
-                 detail::DescribeModuleName(moduleName));
+    LogUtil::LogHookSkipped(
+        "RaceMenu compat"sv,
+        std::format("failed to read version from {}",
+                    detail::DescribeModuleName(moduleName)),
+        spdlog::level::warn);
     return;
   }
 
   const auto timeDateStamp = ReadModuleTimeDateStamp(moduleBase);
   if (!timeDateStamp) {
-    logger::warn(
-        "RaceMenu compat skipped; failed to read PE timestamp from {}"sv,
-        detail::DescribeModuleName(moduleName));
+    LogUtil::LogHookSkipped(
+        "RaceMenu compat"sv,
+        std::format("failed to read PE timestamp from {}",
+                    detail::DescribeModuleName(moduleName)),
+        spdlog::level::warn);
     return;
   }
 
   const auto *layout =
       detail::FindHookLayout(moduleName, *version, *timeDateStamp);
   if (!layout) {
-    logger::warn(
-        "RaceMenu compat skipped; unsupported {} version {} timestamp {:08X}"sv,
-        detail::DescribeModuleName(moduleName), version->string("."sv),
-        *timeDateStamp);
+    LogUtil::LogHookSkipped(
+        "RaceMenu compat"sv,
+        std::format("unsupported {} version {} timestamp {:08X}",
+                    detail::DescribeModuleName(moduleName),
+                    version->string("."sv), *timeDateStamp),
+        spdlog::level::warn);
     return;
   }
 
@@ -237,6 +250,8 @@ void RaceMenuCompat::Install() {
       moduleBase, layout->VisitArmorAddonSite, &detail::Hook_VisitArmorAddon);
   detail::g_installed = true;
 
-  logger::info("Installed RaceMenu compat hooks for {} ({} {:08X})"sv,
-               layout->Label, version->string("."sv), layout->TimeDateStamp);
+  LogUtil::LogHookInstalled(
+      "RaceMenu compat"sv,
+      std::format("{} ({} {:08X})", layout->Label, version->string("."sv),
+                  layout->TimeDateStamp));
 }

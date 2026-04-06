@@ -4,6 +4,7 @@
 #include "Ext/InventoryChanges.h"
 #include "Ext/TESObjectARMA.h"
 #include "GetWornMaskVisitor.h"
+#include "LogUtil.h"
 #include "Patches.h"
 #include "Settings.h"
 
@@ -107,20 +108,23 @@ void Hooks::Install() {
   const auto &settings = Settings::Get();
 
   Patches::WriteInitWornPatch(&InitWornArmor);
+  LogUtil::LogHookInstalled("InitWornArmor"sv);
   Patches::WriteGetWornMaskPatch(&GetWornMask);
+  LogUtil::LogHookInstalled("GetWornMask"sv);
 
   if (settings.useOwnershipBasedArmorMasks) {
-    logger::info("Installing ownership-mask TestBodyPart hook"sv);
     Patches::WriteTestBodyPartByIndexPatch(&TestBodyPartByIndex);
+    LogUtil::LogHookInstalled("Ownership-mask TestBodyPart"sv);
   } else {
-    logger::info("Ownership-mask TestBodyPart hook disabled by settings"sv);
+    LogUtil::LogHookSkipped("Ownership-mask TestBodyPart"sv,
+                            "disabled by settings"sv);
   }
 
   if (settings.installEquipConflictHook) {
-    logger::info("Installing equip conflict hook"sv);
     Patches::WriteFixEquipConflictPatch(&FixEquipConflictCheck);
+    LogUtil::LogHookInstalled("Equip conflict"sv);
   } else {
-    logger::info("Equip conflict hook disabled by settings"sv);
+    LogUtil::LogHookSkipped("Equip conflict"sv, "disabled by settings"sv);
   }
 }
 

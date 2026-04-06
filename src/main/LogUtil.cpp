@@ -76,4 +76,31 @@ auto DescribeOverrideOption(ArmorVariant::OverrideOption a_option)
 
   return "Unknown"sv;
 }
+
+void LogHookInstalled(const std::string_view a_name,
+                      const std::string_view a_detail) {
+  if (a_detail.empty()) {
+    logger::info("Hook install: {}: installed"sv, a_name);
+    return;
+  }
+
+  logger::info("Hook install: {}: installed ({})"sv, a_name, a_detail);
+}
+
+void LogHookSkipped(const std::string_view a_name,
+                    const std::string_view a_reason,
+                    const spdlog::level::level_enum a_level) {
+  switch (a_level) {
+  case spdlog::level::warn:
+    logger::warn("Hook install: {}: skipped ({})"sv, a_name, a_reason);
+    return;
+  case spdlog::level::err:
+  case spdlog::level::critical:
+    logger::error("Hook install: {}: skipped ({})"sv, a_name, a_reason);
+    return;
+  default:
+    logger::info("Hook install: {}: skipped ({})"sv, a_name, a_reason);
+    return;
+  }
+}
 } // namespace LogUtil
