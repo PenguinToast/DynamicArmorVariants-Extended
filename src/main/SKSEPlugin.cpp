@@ -10,6 +10,14 @@
 #include "api/DynamicArmorVariantsExtendedInterface.h"
 
 namespace {
+auto GetDefaultLogLevel() -> spdlog::level::level_enum {
+#ifndef NDEBUG
+  return spdlog::level::trace;
+#else
+  return spdlog::level::info;
+#endif
+}
+
 void InitializeLog() {
 #ifndef NDEBUG
   auto sink = std::make_shared<spdlog::sinks::msvc_sink_mt>();
@@ -24,11 +32,7 @@ void InitializeLog() {
       std::make_shared<spdlog::sinks::basic_file_sink_mt>(path->string(), true);
 #endif
 
-#ifndef NDEBUG
-  const auto level = spdlog::level::trace;
-#else
-  const auto level = spdlog::level::info;
-#endif
+  const auto level = GetDefaultLogLevel();
 
   auto log = std::make_shared<spdlog::logger>("global log"s, std::move(sink));
   log->set_level(level);
@@ -36,6 +40,13 @@ void InitializeLog() {
 
   spdlog::set_default_logger(std::move(log));
   spdlog::set_pattern("%s(%#): [%^%l%$] %v"s);
+}
+
+void ApplyConfiguredLogLevel() {
+  const auto level = Settings::Get().logLevel.value_or(GetDefaultLogLevel());
+  spdlog::set_level(level);
+  spdlog::default_logger()->flush_on(level);
+  logger::info("Logger level set to {}"sv, spdlog::level::to_string_view(level));
 }
 
 } // namespace
@@ -49,6 +60,7 @@ SKSEPlugin_Load(const SKSE::LoadInterface *a_skse) {
   logger::info("{} build {}"sv, Plugin::NAME, Plugin::VERSION_STRING);
   auto *messaging = SKSE::GetMessagingInterface();
   Settings::Load();
+  ApplyConfiguredLogLevel();
 
   Hooks::Install();
 

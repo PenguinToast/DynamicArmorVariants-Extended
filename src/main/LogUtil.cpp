@@ -24,6 +24,15 @@ auto FormatFormID(RE::FormID a_formID) -> std::string {
   return buffer;
 }
 
+auto DescribeActor(const RE::Actor *a_actor) -> std::string {
+  if (!a_actor) {
+    return "<null actor>"s;
+  }
+
+  return GetFormName(a_actor) + " [" + FormatFormID(a_actor->GetFormID()) +
+         "]";
+}
+
 auto DescribeArmorAddon(const RE::TESObjectARMA *a_armorAddon) -> std::string {
   if (!a_armorAddon) {
     return "<null armor addon>"s;
@@ -44,6 +53,20 @@ auto DescribeArmor(const RE::TESObjectARMO *a_armor) -> std::string {
          "] slots=" +
          FormatFormID(static_cast<RE::FormID>(
              a_armor->bipedModelData.bipedObjectSlots.underlying()));
+}
+
+auto DescribeStringArg(const std::string_view a_value,
+                       const std::size_t a_maxLength) -> std::string {
+  if (a_value.empty()) {
+    return "\"\""s;
+  }
+
+  if (a_maxLength == 0 || a_value.size() <= a_maxLength) {
+    return "\""s + std::string(a_value) + "\"";
+  }
+
+  return "\""s + std::string(a_value.substr(0, a_maxLength)) +
+         "\"...(" + std::to_string(a_value.size()) + " chars)";
 }
 
 auto JoinDescriptions(const std::vector<std::string> &a_values) -> std::string {

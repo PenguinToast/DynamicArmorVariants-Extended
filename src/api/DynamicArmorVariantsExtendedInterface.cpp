@@ -3,6 +3,7 @@
 #include "ConfigLoader.h"
 #include "Ext/Actor.h"
 #include "main/DynamicArmorManager.h"
+#include "main/LogUtil.h"
 
 namespace {
 std::atomic<bool> g_apiReady{false};
@@ -14,6 +15,13 @@ bool DynamicArmorVariantsExtendedInterface::IsReady() {
 
 bool DynamicArmorVariantsExtendedInterface::RegisterVariantJson(
     const char *a_name, const char *a_variantJson) {
+  DAV_LOG_DEBUG_LAZY(
+      "DAVE API cpp: RegisterVariantJson(name={}, variantJson={})"sv,
+      LogUtil::DescribeStringArg(a_name ? std::string_view(a_name)
+                                        : "<null>"sv),
+      LogUtil::DescribeStringArg(a_variantJson ? std::string_view(a_variantJson)
+                                               : "<null>"sv));
+
   if (!IsReady() || !a_variantJson) {
     return false;
   }
@@ -23,6 +31,10 @@ bool DynamicArmorVariantsExtendedInterface::RegisterVariantJson(
 }
 
 bool DynamicArmorVariantsExtendedInterface::DeleteVariant(const char *a_name) {
+  DAV_LOG_DEBUG_LAZY("DAVE API cpp: DeleteVariant(name={})"sv,
+                     LogUtil::DescribeStringArg(
+                         a_name ? std::string_view(a_name) : "<null>"sv));
+
   if (!IsReady() || !a_name) {
     return false;
   }
@@ -32,6 +44,14 @@ bool DynamicArmorVariantsExtendedInterface::DeleteVariant(const char *a_name) {
 
 bool DynamicArmorVariantsExtendedInterface::SetVariantConditionsJson(
     const char *a_name, const char *a_conditionsJson) {
+  DAV_LOG_DEBUG_LAZY(
+      "DAVE API cpp: SetVariantConditionsJson(name={}, conditionsJson={})"sv,
+      LogUtil::DescribeStringArg(a_name ? std::string_view(a_name)
+                                        : "<null>"sv),
+      LogUtil::DescribeStringArg(a_conditionsJson
+                                     ? std::string_view(a_conditionsJson)
+                                     : "<null>"sv));
+
   if (!IsReady() || !a_name || !a_conditionsJson) {
     return false;
   }
@@ -41,6 +61,11 @@ bool DynamicArmorVariantsExtendedInterface::SetVariantConditionsJson(
 
 bool DynamicArmorVariantsExtendedInterface::SetCondition(
     const char *a_name, const std::shared_ptr<RE::TESCondition> &a_condition) {
+  DAV_LOG_DEBUG_LAZY("DAVE API cpp: SetCondition(name={}, condition={})"sv,
+                     LogUtil::DescribeStringArg(
+                         a_name ? std::string_view(a_name) : "<null>"sv),
+                     a_condition ? "present"sv : "<null>"sv);
+
   if (!IsReady() || !a_name || !a_condition) {
     return false;
   }
@@ -51,6 +76,9 @@ bool DynamicArmorVariantsExtendedInterface::SetCondition(
 }
 
 bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
+  DAV_LOG_DEBUG_LAZY("DAVE API cpp: RefreshActor(actor={})"sv,
+                     LogUtil::DescribeActor(a_actor));
+
   if (!IsReady() || !a_actor) {
     return false;
   }
@@ -63,6 +91,13 @@ bool DynamicArmorVariantsExtendedInterface::RefreshActor(RE::Actor *a_actor) {
 
 bool DynamicArmorVariantsExtendedInterface::ApplyVariantOverride(
     RE::Actor *a_actor, const char *a_variant, bool a_keepExistingOverrides) {
+  DAV_LOG_DEBUG_LAZY(
+      "DAVE API cpp: ApplyVariantOverride(actor={}, variant={}, keepExistingOverrides={})"sv,
+      LogUtil::DescribeActor(a_actor),
+      LogUtil::DescribeStringArg(a_variant ? std::string_view(a_variant)
+                                           : "<null>"sv),
+      a_keepExistingOverrides);
+
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
   }
@@ -74,6 +109,12 @@ bool DynamicArmorVariantsExtendedInterface::ApplyVariantOverride(
 
 bool DynamicArmorVariantsExtendedInterface::RemoveVariantOverride(
     RE::Actor *a_actor, const char *a_variant) {
+  DAV_LOG_DEBUG_LAZY(
+      "DAVE API cpp: RemoveVariantOverride(actor={}, variant={})"sv,
+      LogUtil::DescribeActor(a_actor),
+      LogUtil::DescribeStringArg(a_variant ? std::string_view(a_variant)
+                                           : "<null>"sv));
+
   if (!IsReady() || !a_actor || !a_variant) {
     return false;
   }

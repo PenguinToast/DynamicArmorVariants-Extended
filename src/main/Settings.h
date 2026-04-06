@@ -1,6 +1,8 @@
 #pragma once
 
 #include <chrono>
+#include <optional>
+#include <spdlog/spdlog.h>
 
 struct Settings {
   static constexpr std::size_t DefaultRefreshVariantCacheCapacity = 25000;
@@ -23,6 +25,9 @@ struct Settings {
   // recomputation but keep stale entries resident longer.
   std::chrono::milliseconds refreshVariantCacheTtl{
       DefaultRefreshVariantCacheTtl};
+  // Optional global logger level. Leave unset for the normal build-dependent
+  // default.
+  std::optional<spdlog::level::level_enum> logLevel{};
 
   static auto Load() -> Settings;
   static auto Get() -> const Settings &;

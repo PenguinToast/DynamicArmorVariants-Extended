@@ -4,10 +4,43 @@
 
 #include <fstream>
 #include <limits>
+#include <optional>
 #include <sstream>
 
 namespace {
 Settings g_settings{};
+
+auto ParseLogLevel(const std::string_view a_value)
+    -> std::optional<spdlog::level::level_enum> {
+  if (a_value == "trace"sv) {
+    return spdlog::level::trace;
+  }
+  if (a_value == "debug"sv) {
+    return spdlog::level::debug;
+  }
+  if (a_value == "info"sv) {
+    return spdlog::level::info;
+  }
+  if (a_value == "warn"sv || a_value == "warning"sv) {
+    return spdlog::level::warn;
+  }
+  if (a_value == "error"sv || a_value == "err"sv) {
+    return spdlog::level::err;
+  }
+  if (a_value == "critical"sv) {
+    return spdlog::level::critical;
+  }
+  if (a_value == "off"sv) {
+    return spdlog::level::off;
+  }
+
+  return std::nullopt;
+}
+
+auto DescribeLogLevel(const spdlog::level::level_enum a_level)
+    -> std::string_view {
+  return spdlog::level::to_string_view(a_level);
+}
 
 auto GetSettingsPath() -> fs::path {
   return fs::current_path() / "Data" / "SKSE" / "Plugins" /
@@ -56,6 +89,16 @@ auto Settings::Load() -> Settings {
         root.get("useOwnershipBasedArmorMasks", false).asBool();
     settings.installRaceMenuCompatHooks =
         root.get("installRaceMenuCompatHooks", false).asBool();
+    if (const auto logLevelValue = root["logLevel"];
+        logLevelValue.isString()) {
+      if (const auto parsedLevel = ParseLogLevel(logLevelValue.asString());
+          parsedLevel.has_value()) {
+        settings.logLevel = *parsedLevel;
+      } else {
+        logger::warn("Unknown logLevel {}; ignoring"sv,
+                     logLevelValue.asString());
+      }
+    }
     if (const auto capacityValue =
             root.get("refreshVariantCacheCapacity",
                      static_cast<Json::UInt64>(
@@ -88,11 +131,15 @@ auto Settings::Load() -> Settings {
     logger::info("Loaded settings from {} (installEquipConflictHook={}, "
                  "useOwnershipBasedArmorMasks={}, "
                  "installRaceMenuCompatHooks={}, "
+                 "logLevel={}, "
                  "refreshVariantCacheCapacity={}, "
                  "refreshVariantCacheTtlMs={})"sv,
                  path.string(), settings.installEquipConflictHook,
                  settings.useOwnershipBasedArmorMasks,
                  settings.installRaceMenuCompatHooks,
+                 settings.logLevel.has_value()
+                     ? DescribeLogLevel(*settings.logLevel)
+                     : "default"sv,
                  settings.refreshVariantCacheCapacity,
                  settings.refreshVariantCacheTtl.count());
     g_settings = settings;
