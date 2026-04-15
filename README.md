@@ -94,13 +94,15 @@ To build a release archive:
 ./scripts/build-package.sh
 ```
 
+For the full WSL build, deploy, packaging, tag, and GitHub release workflow, see
+`docs/Build-Deploy-Release.md`.
+
 This writes a zip under `dist/` named like:
 `Dynamic Armor Variants Extended v1.1.0.zip`
 
-The package script will fail unless:
-- the worktree is clean
-- `HEAD` has exactly one tag
-- that tag is valid semver
+For a real release package, keep the worktree clean and put a semver tag like
+`v1.7.1` on `HEAD`. Otherwise `scripts/version.sh` will emit a dev version
+string and the archive name will include the `-dev+<sha>` suffix.
 
 The release package includes:
 - a FOMOD installer layout compatible with the original DAV package structure
