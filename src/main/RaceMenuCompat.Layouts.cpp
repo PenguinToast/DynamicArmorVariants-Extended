@@ -24,8 +24,8 @@ constexpr std::array<std::uint8_t, 13> kGetSkinFormPrologue_0419_10{
     0x48, 0x89, 0x5C, 0x24, 0x08, 0x57, 0x48,
     0x83, 0xEC, 0x30, 0x48, 0x8B, 0xF9};
 constexpr std::array<std::uint8_t, 15> kGetSkinFormPrologue_0345_SE{
-    0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x6C, 0x24, 0x10,
-    0x48, 0x89, 0x74, 0x24, 0x18};
+    0x48, 0x89, 0x5C, 0x24, 0x08, 0x48, 0x89, 0x6C,
+    0x24, 0x10, 0x48, 0x89, 0x74, 0x24, 0x18};
 constexpr std::array<std::uint8_t, 13> kGetSkinFormPrologue_0345_VR{
     0x48, 0x89, 0x5C, 0x24, 0x18, 0x55, 0x48,
     0x83, 0xEC, 0x60, 0x48, 0x8B, 0xE9};
@@ -34,11 +34,9 @@ constexpr std::array<std::uint8_t, 14> kVisitAllWornItemsPrologue_0345_VR{
     0x48, 0x89, 0x5C, 0x24, 0x10, 0x55, 0x56,
     0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56};
 constexpr std::array<std::uint8_t, 12> kVisitAllWornItemsPrologue_0345_SE{
-    0x48, 0x89, 0x5C, 0x24, 0x10, 0x48,
-    0x89, 0x6C, 0x24, 0x20, 0x56, 0x57};
+    0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x6C, 0x24, 0x20, 0x56, 0x57};
 constexpr std::array<std::uint8_t, 12> kVisitAllWornItemsPrologue_0419_9{
-    0x48, 0x89, 0x5C, 0x24, 0x10, 0x48,
-    0x89, 0x6C, 0x24, 0x20, 0x56, 0x57};
+    0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x6C, 0x24, 0x20, 0x56, 0x57};
 constexpr std::array<std::uint8_t, 13> kVisitAllWornItemsPrologue_0419_13_AE{
     0x41, 0x57, 0x48, 0x83, 0xEC, 0x50, 0x48,
     0x8B, 0x05, 0x2B, 0xE1, 0x14, 0x00};
@@ -52,36 +50,41 @@ constexpr std::array<std::uint8_t, 22> kVisitAllWornItemsPrologue_0419_13_Entry{
     0x48, 0x89, 0x5C, 0x24, 0x10, 0x48, 0x89, 0x6C, 0x24, 0x20, 0x56,
     0x57, 0x41, 0x55, 0x41, 0x56, 0x41, 0x57, 0x48, 0x83, 0xEC, 0x50};
 constexpr std::array<std::uint8_t, 12> kVisitAllWornItemsPrologue_0419_15{
-    0x48, 0x89, 0x5C, 0x24, 0x10, 0x55,
-    0x56, 0x57, 0x41, 0x54, 0x41, 0x55};
+    0x48, 0x89, 0x5C, 0x24, 0x10, 0x55, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55};
 
-constexpr std::array<std::uint8_t, 15> kVisitAllWornItemsSlotMatchPrologue_0345_VR{
-    0x48, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x40, 0x48, 0x8B,
-    0x44, 0x24, 0x40, 0xFF, 0x10};
-constexpr std::array<std::uint8_t, 15> kVisitAllWornItemsSlotMatchPrologue_0345_SE{
-    0x49, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x28, 0x48, 0x8B,
-    0x44, 0x24, 0x28, 0xFF, 0x10};
-constexpr std::array<std::uint8_t, 15> kVisitAllWornItemsSlotMatchPrologue_0419_9{
-    0x49, 0x8B, 0x17, 0x48, 0x8D, 0x4C, 0x24, 0x28, 0x48, 0x8B,
-    0x44, 0x24, 0x28, 0xFF, 0x10};
-constexpr std::array<std::uint8_t, 15> kVisitAllWornItemsSlotMatchPrologue_0419_13{
-    0x48, 0x8B, 0x44, 0x24, 0x28, 0x49, 0x8B, 0x17, 0x48, 0x8D,
-    0x4C, 0x24, 0x28, 0xFF, 0x10};
-constexpr std::array<std::uint8_t, 15> kVisitAllWornItemsSlotMatchPrologue_0419_15{
-    0x48, 0x8B, 0x44, 0x24, 0x48, 0x48, 0x8B, 0x16, 0x48, 0x8D,
-    0x4C, 0x24, 0x48, 0xFF, 0x10};
+constexpr std::array<std::uint8_t, 15>
+    kVisitAllWornItemsSlotMatchPrologue_0345_VR{0x48, 0x8B, 0x17, 0x48, 0x8D,
+                                                0x4C, 0x24, 0x40, 0x48, 0x8B,
+                                                0x44, 0x24, 0x40, 0xFF, 0x10};
+constexpr std::array<std::uint8_t, 15>
+    kVisitAllWornItemsSlotMatchPrologue_0345_SE{0x49, 0x8B, 0x17, 0x48, 0x8D,
+                                                0x4C, 0x24, 0x28, 0x48, 0x8B,
+                                                0x44, 0x24, 0x28, 0xFF, 0x10};
+constexpr std::array<std::uint8_t, 15>
+    kVisitAllWornItemsSlotMatchPrologue_0419_9{0x49, 0x8B, 0x17, 0x48, 0x8D,
+                                               0x4C, 0x24, 0x28, 0x48, 0x8B,
+                                               0x44, 0x24, 0x28, 0xFF, 0x10};
+constexpr std::array<std::uint8_t, 15>
+    kVisitAllWornItemsSlotMatchPrologue_0419_13{0x48, 0x8B, 0x44, 0x24, 0x28,
+                                                0x49, 0x8B, 0x17, 0x48, 0x8D,
+                                                0x4C, 0x24, 0x28, 0xFF, 0x10};
+constexpr std::array<std::uint8_t, 15>
+    kVisitAllWornItemsSlotMatchPrologue_0419_15{0x48, 0x8B, 0x44, 0x24, 0x48,
+                                                0x48, 0x8B, 0x16, 0x48, 0x8D,
+                                                0x4C, 0x24, 0x48, 0xFF, 0x10};
 
 constexpr std::array<std::uint8_t, 21> kVisitArmorAddonPrologue_0419_9{
     0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41, 0x56,
     0x41, 0x57, 0x48, 0x8D, 0xAC, 0x24, 0x98, 0xFE, 0xFF, 0xFF};
 constexpr std::array<std::uint8_t, 19> kVisitArmorAddonPrologue_0419_13{
-    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54,
-    0x41, 0x56, 0x41, 0x57, 0x48, 0x8D, 0xAC,
-    0x24, 0xA0, 0xFE, 0xFF, 0xFF};
+    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x56, 0x41,
+    0x57, 0x48, 0x8D, 0xAC, 0x24, 0xA0, 0xFE, 0xFF, 0xFF};
 constexpr std::array<std::uint8_t, 19> kVisitArmorAddonPrologue_0419_15{
-    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54,
-    0x41, 0x56, 0x41, 0x57, 0x48, 0x8D, 0xAC,
-    0x24, 0xC0, 0xFE, 0xFF, 0xFF};
+    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x56, 0x41,
+    0x57, 0x48, 0x8D, 0xAC, 0x24, 0xC0, 0xFE, 0xFF, 0xFF};
+constexpr std::array<std::uint8_t, 19> kVisitArmorAddonPrologue_UBE_07{
+    0x40, 0x55, 0x53, 0x56, 0x57, 0x41, 0x54, 0x41, 0x56, 0x41,
+    0x57, 0x48, 0x8D, 0xAC, 0x24, 0xD0, 0xFE, 0xFF, 0xFF};
 constexpr std::array<std::uint8_t, 20> kVisitArmorAddonPrologue_SE_0416{
     0x40, 0x53, 0x55, 0x56, 0x57, 0x41, 0x54, 0x41, 0x55, 0x41,
     0x56, 0x41, 0x57, 0x48, 0x81, 0xEC, 0xC8, 0x01, 0x00, 0x00};
@@ -112,7 +115,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000CE6E5, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0345_VR),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x48,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rdi,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::Rdi,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000CE900, 20,
                      kVisitArmorAddonPrologue_SE_0416),
@@ -131,7 +135,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000D1F39, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0345_SE),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000D2410, 20,
                      kVisitArmorAddonPrologue_SE_0416),
@@ -150,7 +155,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007A3C9, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007A830, 21,
                      kVisitArmorAddonPrologue_0419_9),
@@ -169,7 +175,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B329, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007B9A0, 19,
                      kVisitArmorAddonPrologue_0419_13),
@@ -188,7 +195,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007B3A9, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_9),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007BA20, 19,
                      kVisitArmorAddonPrologue_0419_13),
@@ -207,7 +215,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA79, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0F0, 19,
                      kVisitArmorAddonPrologue_0419_13),
@@ -226,7 +235,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0D0, 19,
                      kVisitArmorAddonPrologue_0419_13),
@@ -245,7 +255,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EA59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F0D0, 19,
                      kVisitArmorAddonPrologue_0419_13),
@@ -264,10 +275,33 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x0007EB59, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_13),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::R15,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x0007F1D0, 19,
                      kVisitArmorAddonPrologue_0419_13),
+    },
+    // Custom skee64.dll shipped by the UBE mod. This layout is currently
+    // derived from static analysis only and remains untested in-game.
+    HookLayout{
+        .Label = "UBE 2.0 U 0.7 custom skee64"sv,
+        .ModuleName = kSkee64ModuleName,
+        .Version = REL::Version{4, 0, 0, 0},
+        .TimeDateStamp = 0x61ECAF64,
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x00077DE0, 13,
+                                    kGetSkinFormPrologue_0419_10),
+        .VisitAllWornItemsSite =
+            MakeSite("NifUtils::VisitAllWornItems", 0x00078020, 22,
+                     kVisitAllWornItemsPrologue_0419_13_Entry),
+        .VisitAllWornItemsSlotMatchSite =
+            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000780A9, 15,
+                     kVisitAllWornItemsSlotMatchPrologue_0419_9),
+        .VisitAllWornItemsSlotMatchMaskStackOffset = 0x30,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::R15,
+        .VisitArmorAddonSite =
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x000786B0, 19,
+                     kVisitArmorAddonPrologue_UBE_07),
     },
     HookLayout{
         .Label = "RaceMenu AE 0.4.19.15"sv,
@@ -283,7 +317,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_15),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x50,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rsi,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::Rsi,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000C2F60, 19,
                      kVisitArmorAddonPrologue_0419_15),
@@ -302,7 +337,8 @@ constexpr std::array kHookLayouts{
             MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C2C31, 15,
                      kVisitAllWornItemsSlotMatchPrologue_0419_15),
         .VisitAllWornItemsSlotMatchMaskStackOffset = 0x50,
-        .VisitAllWornItemsSlotMatchEntryRegister = HookLayout::EntryRegister::Rsi,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::Rsi,
         .VisitArmorAddonSite =
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000C2F60, 19,
                      kVisitArmorAddonPrologue_0419_15),
@@ -350,10 +386,9 @@ auto ReadModuleVersion(const HMODULE a_module) -> std::optional<REL::Version> {
     return std::nullopt;
   }
 
-  if (!REX::W32::GetFileVersionInfoW(modulePath.data(), 0,
-                                     static_cast<std::uint32_t>(
-                                         versionData.size()),
-                                     versionData.data())) {
+  if (!REX::W32::GetFileVersionInfoW(
+          modulePath.data(), 0, static_cast<std::uint32_t>(versionData.size()),
+          versionData.data())) {
     return std::nullopt;
   }
 
@@ -362,13 +397,11 @@ auto ReadModuleVersion(const HMODULE a_module) -> std::optional<REL::Version> {
   if (!REX::W32::VerQueryValueW(versionData.data(), L"\\",
                                 std::addressof(versionBlock),
                                 std::addressof(versionBlockSize)) ||
-      !versionBlock ||
-      versionBlockSize < sizeof(VS_FIXEDFILEINFO)) {
+      !versionBlock || versionBlockSize < sizeof(VS_FIXEDFILEINFO)) {
     return std::nullopt;
   }
 
-  const auto *fixedInfo =
-      static_cast<const VS_FIXEDFILEINFO *>(versionBlock);
+  const auto *fixedInfo = static_cast<const VS_FIXEDFILEINFO *>(versionBlock);
   return REL::Version{
       static_cast<std::uint16_t>((fixedInfo->dwFileVersionMS >> 16) & 0xFFFF),
       static_cast<std::uint16_t>(fixedInfo->dwFileVersionMS & 0xFFFF),
