@@ -16,16 +16,16 @@ namespace {
 using namespace std::literals;
 using namespace RaceMenuCompat::detail;
 
-auto ResolveHookAddress(const std::uintptr_t a_moduleBase, const HookSite &a_site)
-    -> std::uintptr_t {
+auto ResolveHookAddress(const std::uintptr_t a_moduleBase,
+                        const HookSite &a_site) -> std::uintptr_t {
   return a_moduleBase + a_site.Rva;
 }
 
 auto MatchesPrologue(const std::uintptr_t a_moduleBase, const HookSite &a_site)
     -> bool {
   const auto address = ResolveHookAddress(a_moduleBase, a_site);
-  return std::memcmp(reinterpret_cast<const void *>(address), a_site.Prologue.data(),
-                     a_site.Prologue.size()) == 0;
+  return std::memcmp(reinterpret_cast<const void *>(address),
+                     a_site.Prologue.data(), a_site.Prologue.size()) == 0;
 }
 
 void WriteAbsoluteJump(const std::uintptr_t a_address,
@@ -55,8 +55,7 @@ void WriteAbsoluteJump(const std::uintptr_t a_address,
 }
 
 auto CreateOriginalTrampoline(const std::uintptr_t a_address,
-                              const std::size_t a_patchSize)
-    -> std::uintptr_t {
+                              const std::size_t a_patchSize) -> std::uintptr_t {
   constexpr std::size_t kAbsoluteJumpSize = 12;
   auto *memory = static_cast<std::uint8_t *>(
       SKSE::GetTrampoline().allocate(a_patchSize + kAbsoluteJumpSize));
@@ -85,14 +84,13 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
       siteAddress + a_layout.VisitAllWornItemsSlotMatchSite.PatchSize;
   const auto maskStackOffset =
       a_layout.VisitAllWornItemsSlotMatchMaskStackOffset;
-  const auto entryRegister =
-      a_layout.VisitAllWornItemsSlotMatchEntryRegister;
+  const auto entryRegister = a_layout.VisitAllWornItemsSlotMatchEntryRegister;
 
   struct VisitAllWornItemsSlotMatchPatch final : Xbyak::CodeGenerator {
-    VisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_helper,
-                                    const std::uint8_t a_maskStackOffset,
-                                    const HookLayout::EntryRegister a_entryRegister,
-                                    const std::uintptr_t a_resumeAddress) {
+    VisitAllWornItemsSlotMatchPatch(
+        const std::uintptr_t a_helper, const std::uint8_t a_maskStackOffset,
+        const HookLayout::EntryRegister a_entryRegister,
+        const std::uintptr_t a_resumeAddress) {
       mov(ecx, dword[rsp + a_maskStackOffset]);
 
       switch (a_entryRegister) {
@@ -119,13 +117,15 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
     }
   };
 
-  static std::vector<std::unique_ptr<VisitAllWornItemsSlotMatchPatch>> s_patches;
+  static std::vector<std::unique_ptr<VisitAllWornItemsSlotMatchPatch>>
+      s_patches;
   auto patch = std::make_unique<VisitAllWornItemsSlotMatchPatch>(
       reinterpret_cast<std::uintptr_t>(&DoesCurrentVisitItemMatchSlotMask),
       maskStackOffset, entryRegister, resumeAddress);
   patch->ready();
 
-  WriteAbsoluteJump(siteAddress, reinterpret_cast<std::uintptr_t>(patch->getCode()),
+  WriteAbsoluteJump(siteAddress,
+                    reinterpret_cast<std::uintptr_t>(patch->getCode()),
                     a_layout.VisitAllWornItemsSlotMatchSite.PatchSize,
                     a_layout.VisitAllWornItemsSlotMatchSite.Prologue);
   s_patches.push_back(std::move(patch));
@@ -141,11 +141,11 @@ auto ValidateHookSite(const std::uintptr_t a_moduleBase, const HookSite &a_site)
     return true;
   }
 
-  LogUtil::LogHookSkipped(
-      "RaceMenu compat"sv,
-      std::format("{} prologue mismatch at {:X}", a_site.Name,
-                  ResolveHookAddress(a_moduleBase, a_site)),
-      spdlog::level::warn);
+  LogUtil::LogHookSkipped("RaceMenu compat"sv,
+                          std::format("{} prologue mismatch at {:X}",
+                                      a_site.Name,
+                                      ResolveHookAddress(a_moduleBase, a_site)),
+                          spdlog::level::warn);
   return false;
 }
 
@@ -168,7 +168,8 @@ auto ReadModuleTimeDateStamp(const std::uintptr_t a_moduleBase)
 }
 
 void InstallAbsoluteJumpHook(const std::uintptr_t a_moduleBase,
-                             const HookSite &a_site, const void *a_replacement) {
+                             const HookSite &a_site,
+                             const void *a_replacement) {
   WriteAbsoluteJump(ResolveHookAddress(a_moduleBase, a_site),
                     reinterpret_cast<std::uintptr_t>(a_replacement),
                     a_site.PatchSize, a_site.Prologue);
@@ -202,21 +203,19 @@ void RaceMenuCompat::Install() {
   const auto moduleBase = reinterpret_cast<std::uintptr_t>(module);
   const auto version = detail::ReadModuleVersion(module);
   if (!version) {
-    LogUtil::LogHookSkipped(
-        "RaceMenu compat"sv,
-        std::format("failed to read version from {}",
-                    detail::DescribeModuleName(moduleName)),
-        spdlog::level::warn);
+    LogUtil::LogHookSkipped("RaceMenu compat"sv,
+                            std::format("failed to read version from {}",
+                                        detail::DescribeModuleName(moduleName)),
+                            spdlog::level::warn);
     return;
   }
 
   const auto timeDateStamp = ReadModuleTimeDateStamp(moduleBase);
   if (!timeDateStamp) {
-    LogUtil::LogHookSkipped(
-        "RaceMenu compat"sv,
-        std::format("failed to read PE timestamp from {}",
-                    detail::DescribeModuleName(moduleName)),
-        spdlog::level::warn);
+    LogUtil::LogHookSkipped("RaceMenu compat"sv,
+                            std::format("failed to read PE timestamp from {}",
+                                        detail::DescribeModuleName(moduleName)),
+                            spdlog::level::warn);
     return;
   }
 
@@ -246,12 +245,12 @@ void RaceMenuCompat::Install() {
           moduleBase, layout->VisitAllWornItemsSite,
           &detail::Hook_VisitAllWornItems);
   InstallVisitAllWornItemsSlotMatchPatch(moduleBase, *layout);
-  detail::g_originalVisitArmorAddon = InstallTrampolineHook<VisitArmorAddonFunc>(
+  InstallTrampolineHook<VisitArmorAddonFunc>(
       moduleBase, layout->VisitArmorAddonSite, &detail::Hook_VisitArmorAddon);
   detail::g_installed = true;
 
-  LogUtil::LogHookInstalled(
-      "RaceMenu compat"sv,
-      std::format("{} ({} {:08X})", layout->Label, version->string("."sv),
-                  layout->TimeDateStamp));
+  LogUtil::LogHookInstalled("RaceMenu compat"sv,
+                            std::format("{} ({} {:08X})", layout->Label,
+                                        version->string("."sv),
+                                        layout->TimeDateStamp));
 }

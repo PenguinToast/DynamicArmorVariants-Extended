@@ -35,16 +35,14 @@ struct HookLayout {
 using VisitArmorAddonFunc =
     void(RE::Actor *, RE::TESObjectARMO *, RE::TESObjectARMA *,
          std::function<void(bool, RE::NiNode *, RE::NiAVObject *)>);
-using VisitAllWornItemsFunc =
-    void(RE::Actor *, std::uint32_t,
-         std::function<void(RE::InventoryEntryData *)>);
+using VisitAllWornItemsFunc = void(
+    RE::Actor *, std::uint32_t, std::function<void(RE::InventoryEntryData *)>);
 using EffectiveArmorMaskCacheEntry =
     std::pair<RE::TESObjectARMO *, std::uint32_t>;
 using ResolvedArmorAddonPair =
     std::pair<RE::TESObjectARMO *, RE::TESObjectARMA *>;
 
 extern bool g_installed;
-extern VisitArmorAddonFunc *g_originalVisitArmorAddon;
 extern VisitAllWornItemsFunc *g_originalVisitAllWornItems;
 extern thread_local RE::Actor *g_currentVisitAllWornItemsActor;
 extern thread_local std::vector<EffectiveArmorMaskCacheEntry>
@@ -54,7 +52,8 @@ struct ScopedVisitAllWornItemsContext final {
   explicit ScopedVisitAllWornItemsContext(RE::Actor *a_actor);
   ~ScopedVisitAllWornItemsContext();
 
-  ScopedVisitAllWornItemsContext(const ScopedVisitAllWornItemsContext &) = delete;
+  ScopedVisitAllWornItemsContext(const ScopedVisitAllWornItemsContext &) =
+      delete;
   auto operator=(const ScopedVisitAllWornItemsContext &)
       -> ScopedVisitAllWornItemsContext & = delete;
 
@@ -62,7 +61,8 @@ struct ScopedVisitAllWornItemsContext final {
   std::vector<EffectiveArmorMaskCacheEntry> previousEffectiveMaskCache;
 };
 
-auto Hook_GetSkinForm(RE::Actor *a_actor, std::uint32_t a_mask) -> RE::TESForm *;
+auto Hook_GetSkinForm(RE::Actor *a_actor, std::uint32_t a_mask)
+    -> RE::TESForm *;
 void Hook_VisitAllWornItems(
     RE::Actor *a_actor, std::uint32_t a_mask,
     std::function<void(RE::InventoryEntryData *)> a_functor);
