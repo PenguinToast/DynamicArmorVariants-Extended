@@ -3,7 +3,6 @@
 
 #include "Ext/IItemChangeVisitor.h"
 #include "Ext/InventoryChanges.h"
-#include "Ext/TESObjectARMA.h"
 
 #include <array>
 #include <set>
@@ -84,6 +83,36 @@ auto HasVariantsLocked(const DynamicArmorManagerState &a_state,
 
   return false;
 }
+
+auto ReplacementAddonsMatch(const std::optional<ArmorVariant::AddonList> &a_lhs,
+                            const std::optional<ArmorVariant::AddonList> &a_rhs)
+    -> bool {
+  if (!a_lhs.has_value() || !a_rhs.has_value()) {
+    return a_lhs.has_value() == a_rhs.has_value();
+  }
+
+  if (a_lhs->size() != a_rhs->size()) {
+    return false;
+  }
+
+  for (std::size_t i = 0; i < a_lhs->size(); ++i) {
+    if ((*a_lhs)[i].Armor != (*a_rhs)[i].Armor ||
+        (*a_lhs)[i].ArmorAddon != (*a_rhs)[i].ArmorAddon) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+auto EquivalentRenderState(const ArmorAddonResolutionCache::Value &a_lhs,
+                           const ArmorAddonResolutionCache::Value &a_rhs)
+    -> bool {
+  return a_lhs.ActiveVariant == a_rhs.ActiveVariant &&
+         a_lhs.SourceAddonMatchesRace == a_rhs.SourceAddonMatchesRace &&
+         ReplacementAddonsMatch(a_lhs.ResolvedAddonList,
+                                a_rhs.ResolvedAddonList);
+}
 } // namespace dave::detail
 
 auto DynamicArmorManager::GetVariants(RE::TESObjectARMO *a_armor) const
@@ -127,7 +156,6 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
     return stats;
   }
 
-  const auto race = a_actor->GetRace();
   auto &state = *state_;
   std::unique_lock lock(state.mutex);
 
@@ -138,30 +166,29 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
 
   for (auto *armor : equippedArmorVisitor) {
     for (auto *armorAddon : armor->armorAddons) {
-      if (!armorAddon ||
-          (race && !Ext::TESObjectARMA::HasRace(armorAddon, race))) {
+      if (!armorAddon) {
         continue;
       }
-
       const auto key = ArmorAddonResolutionCache::Key{
           .ActorFormID = a_actor->GetFormID(),
           .ArmorAddonFormID = armorAddon->GetFormID()};
 
       const auto uncachedResolution =
           dave::detail::BuildArmorAddonResolution(state, a_actor, armorAddon);
-      const auto activeVariant = uncachedResolution.ActiveVariant;
-      const auto cacheUpdate =
-          state.armorAddonResolutionCache.UpsertIgnoringTtl(
-              key, std::move(uncachedResolution));
+      const auto previousResolution =
+          state.armorAddonResolutionCache.PeekIgnoringTtl(key);
+      const auto resolutionChanged =
+          !previousResolution.has_value() ||
+          !dave::detail::EquivalentRenderState(previousResolution->get(),
+                                               uncachedResolution);
+      state.armorAddonResolutionCache.UpsertIgnoringTtl(
+          key, std::move(uncachedResolution));
 
-      if (!cacheUpdate.HadEntry) {
-        stats.Changed = true;
-      } else if (cacheUpdate.PreviousActiveVariant != activeVariant) {
+      if (resolutionChanged) {
         stats.Changed = true;
       }
     }
   }
-
   return stats;
 }
 

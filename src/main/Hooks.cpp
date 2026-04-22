@@ -133,38 +133,37 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
   const auto useMaskOverrides =
       DynamicArmorManager::GetSingleton()->ShouldUseCustomInitWornArmor(
           a_actor, a_armor);
-  auto race = a_actor->GetRace();
   auto sex = a_actor->GetActorBase()->GetSex();
-  std::unordered_set<RE::TESObjectARMA *> initializedAddons;
-  initializedAddons.reserve(RE::BIPED_OBJECTS::kTotal * 2);
+  // Different source branches can converge on the same resolved visual ARMA.
+  // Initialize each resolved addon once so we do not render duplicates.
+  std::unordered_set<RE::TESObjectARMA *> initializedResolvedAddons;
+  initializedResolvedAddons.reserve(RE::BIPED_OBJECTS::kTotal * 2);
 
   for (auto &armorAddon : a_armor->armorAddons) {
-    if (Ext::TESObjectARMA::HasRace(armorAddon, race)) {
+    auto visitor = [&initializedResolvedAddons, a_armor, a_biped, sex,
+                    useMaskOverrides](
+                       const DynamicArmorResolvedAddonVisit &a_visit) {
+      auto *visitedArmor = a_visit.Armor;
+      auto *visitedArmorAddon = a_visit.ArmorAddon;
+      if (!visitedArmorAddon ||
+          !initializedResolvedAddons.insert(visitedArmorAddon).second) {
+        return;
+      }
 
-      auto visitor = [&initializedAddons, a_biped, sex, useMaskOverrides](
-                         const DynamicArmorResolvedAddonVisit &a_visit) {
-        auto *visitedArmor = a_visit.Armor;
-        auto *visitedArmorAddon = a_visit.ArmorAddon;
-        if (!visitedArmorAddon ||
-            !initializedAddons.insert(visitedArmorAddon).second) {
-          return;
-        }
-
-        if (useMaskOverrides && a_visit.InitOverrideMask.has_value()) {
-          ScopedBodyPartTestOverride maskOverride{
-              static_cast<RE::BGSBipedObjectForm *>(visitedArmor),
-              *a_visit.InitOverrideMask};
-          return Ext::TESObjectARMA::InitWornArmorAddon(
-              visitedArmorAddon, visitedArmor, a_biped, sex);
-        }
-
+      if (useMaskOverrides && a_visit.InitOverrideMask.has_value()) {
+        ScopedBodyPartTestOverride maskOverride{
+            static_cast<RE::BGSBipedObjectForm *>(visitedArmor),
+            *a_visit.InitOverrideMask};
         return Ext::TESObjectARMA::InitWornArmorAddon(
             visitedArmorAddon, visitedArmor, a_biped, sex);
-      };
+      }
 
-      DynamicArmorManager::GetSingleton()->VisitArmorAddons(
-          a_actor, a_armor, armorAddon, visitor);
-    }
+      return Ext::TESObjectARMA::InitWornArmorAddon(visitedArmorAddon,
+                                                    visitedArmor, a_biped, sex);
+    };
+
+    DynamicArmorManager::GetSingleton()->VisitArmorAddons(a_actor, a_armor,
+                                                          armorAddon, visitor);
   }
 }
 

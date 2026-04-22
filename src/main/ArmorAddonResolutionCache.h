@@ -19,7 +19,16 @@ public:
 
   struct Value {
     const ArmorVariant *ActiveVariant{nullptr};
+    bool SourceAddonMatchesRace{false};
     std::optional<ArmorVariant::AddonList> ResolvedAddonList;
+
+    auto HasRenderableAddons() const -> bool {
+      if (ActiveVariant) {
+        return ResolvedAddonList.has_value() && !ResolvedAddonList->empty();
+      }
+
+      return SourceAddonMatchesRace;
+    }
   };
 
   struct UpsertResult {

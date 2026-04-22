@@ -1,7 +1,6 @@
 #include "DynamicArmorManager.h"
 #include "DynamicArmorManager.Internal.h"
 
-#include "Ext/Actor.h"
 #include "Ext/TESObjectARMA.h"
 
 #include <limits>
@@ -170,6 +169,9 @@ auto dave::detail::BuildArmorAddonResolution(
     return resolution;
   }
 
+  const auto race = a_actor->GetRace();
+  resolution.SourceAddonMatchesRace =
+      !race || Ext::TESObjectARMA::HasRace(a_armorAddon, race);
   const std::unordered_map<std::string, std::uint64_t> *overridePriorityByName =
       nullptr;
   if (const auto overrideIt =
@@ -245,9 +247,12 @@ auto dave::detail::BuildArmorAddonResolution(
       }
     }
 
+    const auto *rawResolvedAddons =
+        linkedAddonList ? linkedAddonList : stateAddonList;
+
     resolution.ActiveVariant = activeVariant;
-    resolution.ResolvedAddonList = FilterAddonListForRace(
-        linkedAddonList ? linkedAddonList : stateAddonList, a_actor->GetRace());
+    resolution.ResolvedAddonList =
+        FilterAddonListForRace(rawResolvedAddons, race);
   }
 
   return resolution;

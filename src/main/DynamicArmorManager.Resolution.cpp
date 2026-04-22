@@ -69,7 +69,7 @@ auto DynamicArmorManager::ShouldUseCustomInitWornArmor(
   }
 
   for (auto *armorAddon : a_armor->armorAddons) {
-    if (!armorAddon || !Ext::TESObjectARMA::HasRace(armorAddon, race)) {
+    if (!armorAddon) {
       continue;
     }
 

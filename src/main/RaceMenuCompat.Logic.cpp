@@ -329,8 +329,7 @@ void VisitEffectiveWornArmorsForSlot(RE::Actor *a_actor, std::uint32_t a_mask,
 
   auto *inventory = a_actor->GetInventoryChanges();
   auto *manager = DynamicArmorManager::GetSingleton();
-  auto *race = a_actor->GetRace();
-  if (!inventory || !manager || !race) {
+  if (!inventory || !manager || !a_actor->GetRace()) {
     return;
   }
 
@@ -339,10 +338,8 @@ void VisitEffectiveWornArmorsForSlot(RE::Actor *a_actor, std::uint32_t a_mask,
   class EffectiveWornArmorVisitor final : public Ext::IItemChangeVisitor {
   public:
     EffectiveWornArmorVisitor(RE::Actor *a_actor, std::uint32_t a_mask,
-                              RE::TESRace *a_race,
                               DynamicArmorManager *a_manager, VisitFn &a_visit)
-        : actor(a_actor), mask(a_mask), race(a_race), manager(a_manager),
-          visit(a_visit) {}
+        : actor(a_actor), mask(a_mask), manager(a_manager), visit(a_visit) {}
 
     std::uint32_t Visit(RE::InventoryEntryData *a_entryData) override {
       if (done) {
@@ -355,7 +352,7 @@ void VisitEffectiveWornArmorsForSlot(RE::Actor *a_actor, std::uint32_t a_mask,
       }
 
       for (auto *armorAddon : armor->armorAddons) {
-        if (!armorAddon || !Ext::TESObjectARMA::HasRace(armorAddon, race)) {
+        if (!armorAddon) {
           continue;
         }
 
@@ -378,13 +375,12 @@ void VisitEffectiveWornArmorsForSlot(RE::Actor *a_actor, std::uint32_t a_mask,
 
     RE::Actor *actor{nullptr};
     std::uint32_t mask{0};
-    RE::TESRace *race{nullptr};
     DynamicArmorManager *manager{nullptr};
     VisitFn &visit;
     bool done{false};
   };
 
-  EffectiveWornArmorVisitor visitor{a_actor, a_mask, race, manager, a_visit};
+  EffectiveWornArmorVisitor visitor{a_actor, a_mask, manager, a_visit};
   Ext::InventoryChanges::Accept(inventory, std::addressof(visitor));
 }
 

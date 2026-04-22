@@ -129,20 +129,9 @@ auto dave::detail::BuildResolvedCoverageMask(
       UsesOwnershipMasks(branchMaskMode)
           ? std::addressof(GetOrBuildArmorSlotContributionMap(a_state, a_armor))
           : nullptr;
-  const auto race = a_actor ? a_actor->GetRace() : nullptr;
 
   const auto visitSourceArmorAddon =
       [&](RE::TESObjectARMA *a_sourceArmorAddon) {
-        // Worn-mask coverage must only include source addons that can actually
-        // be selected for this actor. Armors often carry multiple race-specific
-        // ARMA records for the same visual branch; if we aggregate every source
-        // addon, inactive race branches can incorrectly keep head/hair bits
-        // occupied.
-        if (race && a_sourceArmorAddon &&
-            !Ext::TESObjectARMA::HasRace(a_sourceArmorAddon, race)) {
-          return;
-        }
-
         const auto &resolution = GetOrBuildArmorAddonResolution(
             a_state, a_actor, a_sourceArmorAddon);
 
@@ -261,6 +250,10 @@ void dave::detail::VisitResolvedArmorAddons(
   }
 
   if (!a_resolution.ActiveVariant) {
+    if (!a_resolution.SourceAddonMatchesRace) {
+      return;
+    }
+
     a_visit(BuildResolvedBranchVisit(
         a_state, a_defaultArmor, a_sourceArmorAddon, a_sourceContributionMap,
         ArmorVariant::ReplacementAddon{.Armor = nullptr,
