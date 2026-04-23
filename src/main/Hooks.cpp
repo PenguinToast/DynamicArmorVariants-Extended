@@ -8,8 +8,8 @@
 #include "Patches.h"
 #include "Settings.h"
 
+#include <algorithm>
 #include <optional>
-#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -76,6 +76,31 @@ struct PendingUnequip {
   RE::ExtraDataList *extraData{nullptr};
 };
 
+struct InitializedAddon {
+  RE::TESObjectARMO *Armor{nullptr};
+  RE::TESObjectARMA *ArmorAddon{nullptr};
+  std::optional<BipedObjectSlot> InitOverrideMask{std::nullopt};
+};
+
+auto BuildInitializedAddonKey(const DynamicArmorResolvedAddonVisit &a_visit,
+                              const bool a_useMaskOverrides)
+    -> InitializedAddon {
+  return InitializedAddon{
+      .Armor = a_visit.Armor,
+      .ArmorAddon = a_visit.ArmorAddon,
+      .InitOverrideMask =
+          a_useMaskOverrides ? a_visit.InitOverrideMask : std::nullopt,
+  };
+}
+
+auto WasInitialized(const std::vector<InitializedAddon> &a_initializedAddons,
+                    const InitializedAddon &a_key) -> bool {
+  return std::ranges::any_of(a_initializedAddons, [&](const auto &entry) {
+    return entry.Armor == a_key.Armor && entry.ArmorAddon == a_key.ArmorAddon &&
+           entry.InitOverrideMask == a_key.InitOverrideMask;
+  });
+}
+
 class EquipConflictVisitor : public Ext::IItemChangeVisitor {
 public:
   explicit EquipConflictVisitor(BipedObjectSlot a_bodySlot)
@@ -135,20 +160,27 @@ void Hooks::InitWornArmor(RE::TESObjectARMO *a_armor, RE::Actor *a_actor,
           a_actor, a_armor);
   auto sex = a_actor->GetActorBase()->GetSex();
   // Different source branches can converge on the same resolved visual ARMA.
-  // Initialize each resolved addon once so we do not render duplicates.
-  std::unordered_set<RE::TESObjectARMA *> initializedResolvedAddons;
-  initializedResolvedAddons.reserve(RE::BIPED_OBJECTS::kTotal * 2);
+  // Only skip exact owner/mask duplicates; distinct masks may initialize
+  // different body parts from the same resolved addon.
+  std::vector<InitializedAddon> initializedResolvedAddons;
+  initializedResolvedAddons.reserve(
+      static_cast<std::size_t>(RE::BIPED_OBJECTS::kTotal) * 2);
 
   for (auto &armorAddon : a_armor->armorAddons) {
-    auto visitor = [&initializedResolvedAddons, a_armor, a_biped, sex,
-                    useMaskOverrides](
+    auto visitor = [&initializedResolvedAddons, a_biped, sex, useMaskOverrides](
                        const DynamicArmorResolvedAddonVisit &a_visit) {
       auto *visitedArmor = a_visit.Armor;
       auto *visitedArmorAddon = a_visit.ArmorAddon;
-      if (!visitedArmorAddon ||
-          !initializedResolvedAddons.insert(visitedArmorAddon).second) {
+      if (!visitedArmorAddon) {
         return;
       }
+
+      const auto initializedKey =
+          BuildInitializedAddonKey(a_visit, useMaskOverrides);
+      if (WasInitialized(initializedResolvedAddons, initializedKey)) {
+        return;
+      }
+      initializedResolvedAddons.push_back(initializedKey);
 
       if (useMaskOverrides && a_visit.InitOverrideMask.has_value()) {
         ScopedBodyPartTestOverride maskOverride{
