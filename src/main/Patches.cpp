@@ -1,6 +1,11 @@
 #include "Patches.h"
 #include "RE/Offset.Ext.h"
 
+#include <array>
+#include <cstddef>
+#include <cstring>
+#include <span>
+
 namespace {
 constexpr std::uint8_t kSEFixEquipConflictItemStackOffset = 0x80;
 constexpr std::uint8_t kAEFixEquipConflictItemStackOffset = 0x88;
@@ -8,6 +13,15 @@ constexpr std::ptrdiff_t kSESkillLevelingHookOffset = 0x57;
 constexpr std::ptrdiff_t kAESkillLevelingHookOffset = 0x3EE;
 constexpr std::size_t kSESkillLevelingHookSize = 0x8;
 constexpr std::size_t kAESkillLevelingHookSize = 0x5;
+constexpr std::array<std::byte, kSESkillLevelingHookSize>
+    kSESkillLevelingHookBytes{std::byte{0x8B}, std::byte{0x7C},
+                              std::byte{0x24}, std::byte{0x34},
+                              std::byte{0x8B}, std::byte{0x74},
+                              std::byte{0x24}, std::byte{0x30}};
+constexpr std::array<std::byte, kAESkillLevelingHookSize>
+    kAESkillLevelingHookBytes{std::byte{0x43}, std::byte{0x8D},
+                              std::byte{0x74}, std::byte{0x24},
+                              std::byte{0xFF}};
 constexpr auto kAEBipedFromLoopEndOffset =
     static_cast<std::ptrdiff_t>(offsetof(RE::BipedAnim, bufferedObjects));
 
@@ -21,6 +35,22 @@ auto GetFixEquipConflictItemStackOffset() -> std::uint8_t {
 auto GetFixSkillLevelingHookOffset() -> std::ptrdiff_t {
   return REL::Module::IsAE() ? kAESkillLevelingHookOffset
                              : kSESkillLevelingHookOffset;
+}
+
+void VerifySkillLevelingHookBytes(const std::uintptr_t a_address) {
+  const std::span<const std::byte> expected =
+      REL::Module::IsAE()
+          ? std::span<const std::byte>{kAESkillLevelingHookBytes}
+          : std::span<const std::byte>{kSESkillLevelingHookBytes};
+  if (a_address == 0) {
+    util::report_and_fail("Skill leveling hook address resolved to null"sv);
+  }
+
+  if (std::memcmp(reinterpret_cast<const void *>(a_address), expected.data(),
+                  expected.size()) != 0) {
+    util::report_and_fail(
+        "Skill leveling hook bytes did not match the expected runtime shape"sv);
+  }
 }
 } // namespace
 
@@ -148,6 +178,8 @@ void Patches::WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func) {
   auto &trampoline = SKSE::GetTrampoline();
   auto hook = util::MakeHook(RE::Offset::SkillLeveling::SkillMutationHook,
                              GetFixSkillLevelingHookOffset());
+  VerifySkillLevelingHookBytes(hook.address());
+
   struct SEPatch : public Xbyak::CodeGenerator {
     SEPatch(std::uintptr_t a_funcAddr, std::uintptr_t a_resumeAddr) {
       Xbyak::Label func;

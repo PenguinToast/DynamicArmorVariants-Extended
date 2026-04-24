@@ -47,7 +47,10 @@ inline constexpr auto TestBodyPartByIndex = MAKE_OFFSET(14026, 14119, 0x191E20);
 } // namespace BGSBipedObjectForm
 
 namespace SkillLeveling {
-inline constexpr auto SkillMutationHook = MAKE_RELOCATION(37589, 38627);
+// SkyrimVR uses the pre-AE/SE function family for this hook, but the current
+// VR address library release does not expose ID 37589 yet. The verified
+// sse_vr/addrlib mapping is SE 0x140623FC0 -> VR 0x14062CD70.
+inline constexpr auto SkillMutationHook = MAKE_OFFSET(37589, 38627, 0x62CD70);
 } // namespace SkillLeveling
 } // namespace Offset
 } // namespace RE
