@@ -154,8 +154,13 @@ void Hooks::Install() {
   }
 
   if (settings.installSkillLevelingHook) {
-    Patches::WriteFixSkillLevelingPatch(&SkillLeveling::FixArmorCounts);
-    LogUtil::LogHookInstalled("Skill leveling"sv);
+    if (Patches::WriteFixSkillLevelingPatch(&SkillLeveling::FixArmorCounts)) {
+      LogUtil::LogHookInstalled("Skill leveling"sv);
+    } else {
+      LogUtil::LogHookSkipped("Skill leveling"sv,
+                              "runtime bytes did not match expected shape"sv,
+                              spdlog::level::warn);
+    }
   } else {
     LogUtil::LogHookSkipped("Skill leveling"sv, "disabled by settings"sv);
   }

@@ -35,5 +35,5 @@ static_assert(offsetof(SkillLevelingVisitor, heavy) == 0x14);
 using FixSkillLevelingFunc = bool(RE::BipedAnim *a_biped,
                                   SkillLevelingVisitor *a_visitor);
 
-void WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func);
+auto WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func) -> bool;
 } // namespace Patches

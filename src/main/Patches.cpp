@@ -19,7 +19,7 @@ constexpr std::array<std::byte, kSESkillLevelingHookSize>
                               std::byte{0x8B}, std::byte{0x74},
                               std::byte{0x24}, std::byte{0x30}};
 constexpr std::array<std::byte, kAESkillLevelingHookSize>
-    kAESkillLevelingHookBytes{std::byte{0x43}, std::byte{0x8D},
+    kAESkillLevelingHookBytes{std::byte{0x41}, std::byte{0x8D},
                               std::byte{0x74}, std::byte{0x24},
                               std::byte{0xFF}};
 constexpr auto kAEBipedFromLoopEndOffset =
@@ -37,20 +37,24 @@ auto GetFixSkillLevelingHookOffset() -> std::ptrdiff_t {
                              : kSESkillLevelingHookOffset;
 }
 
-void VerifySkillLevelingHookBytes(const std::uintptr_t a_address) {
+auto VerifySkillLevelingHookBytes(const std::uintptr_t a_address) -> bool {
   const std::span<const std::byte> expected =
       REL::Module::IsAE()
           ? std::span<const std::byte>{kAESkillLevelingHookBytes}
           : std::span<const std::byte>{kSESkillLevelingHookBytes};
   if (a_address == 0) {
-    util::report_and_fail("Skill leveling hook address resolved to null"sv);
+    logger::warn("Skill leveling hook address resolved to null"sv);
+    return false;
   }
 
   if (std::memcmp(reinterpret_cast<const void *>(a_address), expected.data(),
-                  expected.size()) != 0) {
-    util::report_and_fail(
-        "Skill leveling hook bytes did not match the expected runtime shape"sv);
+                  expected.size()) == 0) {
+    return true;
   }
+
+  logger::warn(
+      "Skill leveling hook bytes did not match expected runtime shape"sv);
+  return false;
 }
 } // namespace
 
@@ -174,11 +178,14 @@ void Patches::WriteFixEquipConflictPatch(FixEquipConflictCheckFunc *a_func) {
                            reinterpret_cast<std::uintptr_t>(code));
 }
 
-void Patches::WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func) {
+auto Patches::WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func)
+    -> bool {
   auto &trampoline = SKSE::GetTrampoline();
   auto hook = util::MakeHook(RE::Offset::SkillLeveling::SkillMutationHook,
                              GetFixSkillLevelingHookOffset());
-  VerifySkillLevelingHookBytes(hook.address());
+  if (!VerifySkillLevelingHookBytes(hook.address())) {
+    return false;
+  }
 
   struct SEPatch : public Xbyak::CodeGenerator {
     SEPatch(std::uintptr_t a_funcAddr, std::uintptr_t a_resumeAddr) {
@@ -245,4 +252,5 @@ void Patches::WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func) {
   }
   trampoline.write_branch<5>(hook.address(),
                              reinterpret_cast<std::uintptr_t>(code));
+  return true;
 }
