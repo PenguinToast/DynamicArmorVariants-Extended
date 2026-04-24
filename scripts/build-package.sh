@@ -74,6 +74,7 @@ mkdir -p \
     "${STAGE_DIR}/Data/Source/Scripts" \
     "${STAGE_DIR}/Data/SKSE/Plugins" \
     "${STAGE_DIR}/Data/SKSE/Plugins/DynamicArmorVariants" \
+    "${STAGE_DIR}/SkillLevelingHookEnabled" \
     "${STAGE_DIR}/UIExtensions_Menu/Interface/Translations" \
     "${STAGE_DIR}/UIExtensions_Menu/MCM/Config/DynamicArmorMenu" \
     "${STAGE_DIR}/UIExtensions_Menu/Scripts" \
@@ -90,6 +91,8 @@ if [[ -f "${PDB_SRC}" ]]; then
 fi
 cp "${REPO_ROOT}/data/SKSE/Plugins/DynamicArmorVariants/settings.json" \
     "${STAGE_DIR}/Data/SKSE/Plugins/DynamicArmorVariants/"
+cp -R "${REPO_ROOT}/installer/SkillLevelingHookEnabled/." \
+    "${STAGE_DIR}/SkillLevelingHookEnabled/"
 
 cp "${PAPYRUS_BUILD_DIR}/Scripts/DynamicArmor.pex" "${STAGE_DIR}/Data/Scripts/"
 cp "${PAPYRUS_BUILD_DIR}/Source/Scripts/DynamicArmor.psc" "${STAGE_DIR}/Data/Source/Scripts/"
@@ -122,7 +125,11 @@ if fomod_dir.is_dir():
     for xml_path in fomod_dir.glob("*.xml"):
         raw = xml_path.read_bytes()
         text = None
+        if raw.startswith(b"\xff\xfe\xef\xbb\xbf"):
+            text = raw[2:].decode("utf-8-sig")
         for encoding in ("utf-8-sig", "utf-16", "utf-16-le", "utf-16-be"):
+            if text is not None:
+                break
             try:
                 text = raw.decode(encoding)
                 break

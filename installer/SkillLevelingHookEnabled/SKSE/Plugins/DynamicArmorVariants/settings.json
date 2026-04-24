@@ -1,0 +1,8 @@
+{
+  "installEquipConflictHook": true,
+  "useOwnershipBasedArmorMasks": true,
+  "installRaceMenuCompatHooks": true,
+  "installSkillLevelingHook": true,
+  "refreshVariantCacheCapacity": 25000,
+  "refreshVariantCacheTtlMs": 5000
+}
