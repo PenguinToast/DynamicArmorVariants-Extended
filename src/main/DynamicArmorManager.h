@@ -49,6 +49,9 @@ public:
   auto ResolveEquippedArmorVariants(RE::Actor *a_actor) const
       -> EquippedVariantResolutionStats;
 
+  auto HasActiveArmorVariant(RE::Actor *a_actor,
+                             RE::TESObjectARMO *a_armor) const -> bool;
+
   auto GetDisplayName(const std::string &a_variant) const -> std::string;
 
   void ApplyVariant(RE::Actor *a_actor, const std::string &a_variant,

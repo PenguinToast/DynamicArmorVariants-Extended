@@ -18,6 +18,9 @@ struct Settings {
   // Startup policy: if settings are missing or unreadable, leave this false
   // and skip installing optional RaceMenu/NiOverride compatibility hooks.
   bool installRaceMenuCompatHooks{false};
+  // Startup policy: if settings are missing or unreadable, leave this false
+  // and skip patching armor skill leveling for visual armor replacements.
+  bool installSkillLevelingHook{false};
   // Bound for the refresh-time armor resolution caches. Larger values trade
   // memory for fewer evictions during variant refresh checks.
   std::size_t refreshVariantCacheCapacity{DefaultRefreshVariantCacheCapacity};

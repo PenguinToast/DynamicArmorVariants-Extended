@@ -21,4 +21,19 @@ using FixEquipConflictCheckFunc = bool(std::uintptr_t a_itemAddr,
                                        RE::Actor *a_actor);
 
 void WriteFixEquipConflictPatch(FixEquipConflictCheckFunc *a_func);
+
+struct SkillLevelingVisitor {
+  RE::TESObjectARMO **shield;
+  RE::TESObjectARMO **torso;
+  std::uint32_t light;
+  std::uint32_t heavy;
+};
+static_assert(sizeof(SkillLevelingVisitor) == 0x18);
+static_assert(offsetof(SkillLevelingVisitor, light) == 0x10);
+static_assert(offsetof(SkillLevelingVisitor, heavy) == 0x14);
+
+using FixSkillLevelingFunc = bool(RE::BipedAnim *a_biped,
+                                  SkillLevelingVisitor *a_visitor);
+
+void WriteFixSkillLevelingPatch(FixSkillLevelingFunc *a_func);
 } // namespace Patches

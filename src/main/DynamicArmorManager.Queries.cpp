@@ -192,6 +192,29 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
   return stats;
 }
 
+auto DynamicArmorManager::HasActiveArmorVariant(
+    RE::Actor *a_actor, RE::TESObjectARMO *a_armor) const -> bool {
+  if (!a_actor || !a_armor) {
+    return false;
+  }
+
+  auto &state = *state_;
+  std::unique_lock lock(state.mutex);
+
+  for (auto *armorAddon : a_armor->armorAddons) {
+    if (!armorAddon) {
+      continue;
+    }
+
+    if (dave::detail::GetOrBuildArmorAddonResolution(state, a_actor, armorAddon)
+            .ActiveVariant) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 auto DynamicArmorManager::GetDisplayName(const std::string &a_variant) const
     -> std::string {
   const auto &state = *state_;

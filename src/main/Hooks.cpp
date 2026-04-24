@@ -7,6 +7,7 @@
 #include "LogUtil.h"
 #include "Patches.h"
 #include "Settings.h"
+#include "SkillLeveling.h"
 
 #include <algorithm>
 #include <optional>
@@ -150,6 +151,17 @@ void Hooks::Install() {
     LogUtil::LogHookInstalled("Equip conflict"sv);
   } else {
     LogUtil::LogHookSkipped("Equip conflict"sv, "disabled by settings"sv);
+  }
+
+  if (settings.installSkillLevelingHook) {
+    if (REL::Module::IsVR()) {
+      LogUtil::LogHookSkipped("Skill leveling"sv, "unsupported runtime"sv);
+    } else {
+      Patches::WriteFixSkillLevelingPatch(&SkillLeveling::FixArmorCounts);
+      LogUtil::LogHookInstalled("Skill leveling"sv);
+    }
+  } else {
+    LogUtil::LogHookSkipped("Skill leveling"sv, "disabled by settings"sv);
   }
 }
 

@@ -55,10 +55,9 @@ auto Settings::Load() -> Settings {
 
     std::ifstream stream(path);
     if (!stream.is_open()) {
-      logger::warn(
-          "Failed to open settings file {}; equip conflict hook will stay "
-          "disabled"sv,
-          path.string());
+      logger::warn("Failed to open settings file {}; optional settings will "
+                   "stay at defaults"sv,
+                   path.string());
       g_settings = settings;
       return g_settings;
     }
@@ -75,10 +74,9 @@ auto Settings::Load() -> Settings {
     const auto json = buffer.str();
     if (!reader->parse(json.data(), json.data() + json.size(),
                        std::addressof(root), std::addressof(errors))) {
-      logger::error(
-          "Failed to parse settings file {}; equip conflict hook will stay "
-          "disabled: {}"sv,
-          path.string(), errors);
+      logger::error("Failed to parse settings file {}; optional settings will "
+                    "stay at defaults: {}"sv,
+                    path.string(), errors);
       g_settings = settings;
       return g_settings;
     }
@@ -89,6 +87,8 @@ auto Settings::Load() -> Settings {
         root.get("useOwnershipBasedArmorMasks", false).asBool();
     settings.installRaceMenuCompatHooks =
         root.get("installRaceMenuCompatHooks", false).asBool();
+    settings.installSkillLevelingHook =
+        root.get("installSkillLevelingHook", false).asBool();
     if (const auto logLevelValue = root["logLevel"];
         logLevelValue.isString()) {
       if (const auto parsedLevel = ParseLogLevel(logLevelValue.asString());
@@ -131,12 +131,14 @@ auto Settings::Load() -> Settings {
     logger::info("Loaded settings from {} (installEquipConflictHook={}, "
                  "useOwnershipBasedArmorMasks={}, "
                  "installRaceMenuCompatHooks={}, "
+                 "installSkillLevelingHook={}, "
                  "logLevel={}, "
                  "refreshVariantCacheCapacity={}, "
                  "refreshVariantCacheTtlMs={})"sv,
                  path.string(), settings.installEquipConflictHook,
                  settings.useOwnershipBasedArmorMasks,
                  settings.installRaceMenuCompatHooks,
+                 settings.installSkillLevelingHook,
                  settings.logLevel.has_value()
                      ? DescribeLogLevel(*settings.logLevel)
                      : "default"sv,
@@ -145,18 +147,14 @@ auto Settings::Load() -> Settings {
     g_settings = settings;
     return g_settings;
   } catch (const std::exception &a_error) {
-    logger::error(
-        "Failed to load settings; equip conflict hook and partial-slot "
-        "resolution will stay disabled, and RaceMenu compat hooks will stay "
-        "disabled: {}"sv,
-        a_error.what());
+    logger::error("Failed to load settings; optional settings will stay at "
+                  "defaults: {}"sv,
+                  a_error.what());
     g_settings = settings;
     return g_settings;
   } catch (...) {
     logger::error(
-        "Failed to load settings; equip conflict hook and partial-slot "
-        "resolution will stay disabled, and RaceMenu compat hooks will stay "
-        "disabled"sv);
+        "Failed to load settings; optional settings will stay at defaults"sv);
     g_settings = settings;
     return g_settings;
   }

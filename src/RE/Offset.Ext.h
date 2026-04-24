@@ -45,5 +45,9 @@ namespace BGSBipedObjectForm {
 // does not expose ID 14026 yet, so keep using the raw VR offset for now.
 inline constexpr auto TestBodyPartByIndex = MAKE_OFFSET(14026, 14119, 0x191E20);
 } // namespace BGSBipedObjectForm
+
+namespace SkillLeveling {
+inline constexpr auto SkillMutationHook = MAKE_RELOCATION(37589, 38627);
+} // namespace SkillLeveling
 } // namespace Offset
 } // namespace RE
