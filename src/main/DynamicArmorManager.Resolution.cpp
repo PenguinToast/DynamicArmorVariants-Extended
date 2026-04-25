@@ -26,6 +26,11 @@ void DynamicArmorManager::VisitArmorAddons(
 
   if (!a_actor || !a_defaultArmor ||
       Ext::Actor::IsSkin(a_actor, a_armorAddon)) {
+    if (auto *race = a_actor ? a_actor->GetRace() : nullptr;
+        race && !Ext::TESObjectARMA::HasRace(a_armorAddon, race)) {
+      return;
+    }
+
     const auto initMask =
         a_defaultArmor ? a_defaultArmor->bipedModelData.bipedObjectSlots.get()
                        : a_armorAddon->bipedModelData.bipedObjectSlots.get();
