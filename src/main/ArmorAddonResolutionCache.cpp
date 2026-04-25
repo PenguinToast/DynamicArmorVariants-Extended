@@ -53,7 +53,7 @@ auto ArmorAddonResolutionCache::UpsertIgnoringTtl(Key a_key, Value a_value)
 }
 
 void ArmorAddonResolutionCache::Insert(Key a_key, Value a_value) {
-  UpsertIgnoringTtl(std::move(a_key), std::move(a_value));
+  UpsertIgnoringTtl(a_key, std::move(a_value));
 }
 
 void ArmorAddonResolutionCache::Clear() {

@@ -26,8 +26,10 @@ public:
     return 1;
   }
 
-  auto begin() const { return armors_.begin(); }
-  auto end() const { return armors_.begin() + count_; }
+  [[nodiscard]] auto begin() const { return armors_.begin(); }
+  [[nodiscard]] auto end() const {
+    return armors_.begin() + static_cast<std::ptrdiff_t>(count_);
+  }
 
 private:
   std::array<RE::TESObjectARMO *, 32> armors_{};
@@ -173,7 +175,7 @@ auto DynamicArmorManager::ResolveEquippedArmorVariants(RE::Actor *a_actor) const
           .ActorFormID = a_actor->GetFormID(),
           .ArmorAddonFormID = armorAddon->GetFormID()};
 
-      const auto uncachedResolution =
+      auto uncachedResolution =
           dave::detail::BuildArmorAddonResolution(state, a_actor, armorAddon);
       const auto previousResolution =
           state.armorAddonResolutionCache.PeekIgnoringTtl(key);

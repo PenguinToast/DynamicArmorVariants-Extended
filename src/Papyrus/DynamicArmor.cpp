@@ -30,14 +30,14 @@ auto DynamicArmor::GetEquippedArmorsWithVariants(RE::StaticFunctionTag *,
 }
 
 auto DynamicArmor::GetDisplayName(RE::StaticFunctionTag *,
-                                  std::string a_variant) -> std::string {
+                                  std::string a_variant) -> std::string { // NOLINT(performance-unnecessary-value-param)
   DAV_LOG_DEBUG_LAZY("DAVE API papyrus: GetDisplayName(variant={})"sv,
                      LogUtil::DescribeStringArg(a_variant));
   return DynamicArmorManager::GetSingleton()->GetDisplayName(a_variant);
 }
 
 void DynamicArmor::ApplyVariant(RE::StaticFunctionTag *, RE::Actor *a_actor,
-                                std::string a_variant) {
+                                std::string a_variant) { // NOLINT(performance-unnecessary-value-param)
   DAV_LOG_DEBUG_LAZY("DAVE API papyrus: ApplyVariant(actor={}, variant={})"sv,
                      LogUtil::DescribeActor(a_actor),
                      LogUtil::DescribeStringArg(a_variant));

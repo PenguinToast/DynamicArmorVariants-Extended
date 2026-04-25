@@ -26,6 +26,7 @@ private:
       -> ArmorVariant::OverrideOption;
   static auto BuildArmorVariant(const Json::Value &a_variantJson,
                                 ArmorVariant &a_variant) -> bool;
+  // NOLINTNEXTLINE(bugprone-easily-swappable-parameters)
   static auto NormalizeConditionsPayload(const Json::Value &a_root,
                                          Json::Value &a_conditions,
                                          Json::Value &a_refs) -> bool;

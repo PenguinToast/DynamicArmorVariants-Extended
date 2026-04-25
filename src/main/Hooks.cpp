@@ -239,8 +239,8 @@ bool Hooks::TestBodyPartByIndex(RE::BGSBipedObjectForm *a_form,
 
 bool Hooks::FixEquipConflictCheck(std::uintptr_t a_itemAddr,
                                   std::uint32_t a_bodySlot,
-                                  RE::Actor *a_actor) {
-  auto *item = reinterpret_cast<RE::TESForm *>(a_itemAddr);
+                                  RE::Actor *a_actor) { // NOLINT(bugprone-easily-swappable-parameters)
+  auto *item = reinterpret_cast<RE::TESForm *>(a_itemAddr); // NOLINT(performance-no-int-to-ptr)
   auto *armor = item ? item->As<RE::TESObjectARMO>() : nullptr;
   if (!armor || !a_actor) {
     return true;

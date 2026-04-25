@@ -93,7 +93,7 @@ auto ConfigLoader::BuildArmorVariant(const Json::Value &a_variantJson,
 
 auto ConfigLoader::NormalizeConditionsPayload(const Json::Value &a_root,
                                               Json::Value &a_conditions,
-                                              Json::Value &a_refs) -> bool {
+                                              Json::Value &a_refs) -> bool { // NOLINT(bugprone-easily-swappable-parameters)
   if (a_root.isArray()) {
     a_conditions = a_root;
     return true;

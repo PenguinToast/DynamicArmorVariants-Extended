@@ -10,7 +10,7 @@ public:
 
   // members (InventoryUtils::GetWornMaskVisitor)
   util::enumeration<BipedObjectSlot, std::uint32_t> slotMask;
-  std::uint32_t pad0C;
+  std::uint32_t pad0C{0};
   // add
   RE::Actor *actor;
 };

@@ -19,9 +19,9 @@ auto GetFormName(const RE::TESForm *a_form) -> std::string {
 }
 
 auto FormatFormID(RE::FormID a_formID) -> std::string {
-  char buffer[16]{};
-  std::snprintf(buffer, sizeof(buffer), "%08X", a_formID);
-  return buffer;
+  std::array<char, 16> buffer{};
+  std::snprintf(buffer.data(), buffer.size(), "%08X", a_formID);
+  return buffer.data();
 }
 
 auto DescribeActor(const RE::Actor *a_actor) -> std::string {
@@ -58,7 +58,7 @@ auto DescribeArmor(const RE::TESObjectARMO *a_armor) -> std::string {
 auto DescribeStringArg(const std::string_view a_value,
                        const std::size_t a_maxLength) -> std::string {
   if (a_value.empty()) {
-    return "\"\""s;
+    return R"("")"s;
   }
 
   if (a_maxLength == 0 || a_value.size() <= a_maxLength) {

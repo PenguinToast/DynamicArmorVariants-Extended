@@ -72,10 +72,10 @@ void DynamicArmorManager::Deserialize(SKSE::SerializationInterface *a_skse) {
   const auto reader =
       std::unique_ptr<Json::CharReader>(builder.newCharReader());
 
-  auto buffer = std::make_unique<char[]>(length);
-  a_skse->ReadRecordData(buffer.get(), length);
+  std::vector<char> buffer(length);
+  a_skse->ReadRecordData(buffer.data(), length);
 
-  auto begin = buffer.get();
+  auto *begin = buffer.data();
   auto end = begin + length;
 
   Json::Value value;

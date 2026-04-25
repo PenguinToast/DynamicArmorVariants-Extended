@@ -93,9 +93,9 @@ auto dave::detail::GetOrBuildArmorAddonResolution(
     return resolution->get();
   }
 
-  a_state.armorAddonResolutionCache.Insert(
-      key, BuildArmorAddonResolution(a_state, a_actor, a_armorAddon));
-  return a_state.armorAddonResolutionCache.Find(key)->get();
+  const auto resolution = BuildArmorAddonResolution(a_state, a_actor, a_armorAddon);
+  a_state.armorAddonResolutionCache.Insert(key, resolution);
+  return resolution;
 }
 
 auto dave::detail::GetOrBuildArmorSlotContributionMap(

@@ -47,7 +47,7 @@ auto VerifySkillLevelingHookBytes(const std::uintptr_t a_address) -> bool {
     return false;
   }
 
-  if (std::memcmp(reinterpret_cast<const void *>(a_address), expected.data(),
+  if (std::memcmp(reinterpret_cast<const void *>(a_address), expected.data(), // NOLINT(performance-no-int-to-ptr)
                   expected.size()) == 0) {
     return true;
   }
@@ -140,7 +140,7 @@ void Patches::WriteFixEquipConflictPatch(FixEquipConflictCheckFunc *a_func) {
 
   struct Patch : public Xbyak::CodeGenerator {
     Patch(std::uintptr_t a_funcAddr, std::uintptr_t a_testBodyPartAddr,
-          std::uint8_t a_itemStackOffset) {
+          std::uint8_t a_itemStackOffset) { // NOLINT(bugprone-easily-swappable-parameters)
       Xbyak::Label func;
       Xbyak::Label testBodyPart;
       Xbyak::Label exit;

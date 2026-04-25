@@ -24,14 +24,14 @@ auto ResolveHookAddress(const std::uintptr_t a_moduleBase,
 auto MatchesPrologue(const std::uintptr_t a_moduleBase, const HookSite &a_site)
     -> bool {
   const auto address = ResolveHookAddress(a_moduleBase, a_site);
-  return std::memcmp(reinterpret_cast<const void *>(address),
+  return std::memcmp(reinterpret_cast<const void *>(address), // NOLINT(performance-no-int-to-ptr)
                      a_site.Prologue.data(), a_site.Prologue.size()) == 0;
 }
 
 void WriteAbsoluteJump(const std::uintptr_t a_address,
                        const std::uintptr_t a_target,
                        const std::size_t a_patchSize,
-                       std::span<const std::uint8_t> a_expected) {
+                       std::span<const std::uint8_t> a_expected) { // NOLINT(bugprone-easily-swappable-parameters)
   struct AbsoluteJumpPatch final : Xbyak::CodeGenerator {
     explicit AbsoluteJumpPatch(const std::uintptr_t a_target) {
       mov(rax, a_target);
@@ -59,7 +59,7 @@ auto CreateOriginalTrampoline(const std::uintptr_t a_address,
   constexpr std::size_t kAbsoluteJumpSize = 12;
   auto *memory = static_cast<std::uint8_t *>(
       SKSE::GetTrampoline().allocate(a_patchSize + kAbsoluteJumpSize));
-  std::memcpy(memory, reinterpret_cast<const void *>(a_address), a_patchSize);
+  std::memcpy(memory, reinterpret_cast<const void *>(a_address), a_patchSize); // NOLINT(performance-no-int-to-ptr)
 
   const auto returnAddress = a_address + a_patchSize;
   std::array<std::uint8_t, kAbsoluteJumpSize> jump{
@@ -90,7 +90,7 @@ void InstallVisitAllWornItemsSlotMatchPatch(const std::uintptr_t a_moduleBase,
     VisitAllWornItemsSlotMatchPatch(
         const std::uintptr_t a_helper, const std::uint8_t a_maskStackOffset,
         const HookLayout::EntryRegister a_entryRegister,
-        const std::uintptr_t a_resumeAddress) {
+        const std::uintptr_t a_resumeAddress) { // NOLINT(bugprone-easily-swappable-parameters)
       mov(ecx, dword[rsp + a_maskStackOffset]);
 
       switch (a_entryRegister) {
@@ -152,14 +152,14 @@ auto ValidateHookSite(const std::uintptr_t a_moduleBase, const HookSite &a_site)
 auto ReadModuleTimeDateStamp(const std::uintptr_t a_moduleBase)
     -> std::optional<std::uint32_t> {
   const auto *dosHeader =
-      reinterpret_cast<const IMAGE_DOS_HEADER *>(a_moduleBase);
+      reinterpret_cast<const IMAGE_DOS_HEADER *>(a_moduleBase); // NOLINT(performance-no-int-to-ptr)
   if (!dosHeader || dosHeader->e_magic != IMAGE_DOS_SIGNATURE) {
     return std::nullopt;
   }
 
   const auto ntHeadersAddress = a_moduleBase + dosHeader->e_lfanew;
   const auto *ntHeaders =
-      reinterpret_cast<const IMAGE_NT_HEADERS64 *>(ntHeadersAddress);
+      reinterpret_cast<const IMAGE_NT_HEADERS64 *>(ntHeadersAddress); // NOLINT(performance-no-int-to-ptr)
   if (!ntHeaders || ntHeaders->Signature != IMAGE_NT_SIGNATURE) {
     return std::nullopt;
   }
@@ -181,7 +181,7 @@ auto InstallTrampolineHook(const std::uintptr_t a_moduleBase,
     -> Fn * {
   const auto address = ResolveHookAddress(a_moduleBase, a_site);
   auto *original = reinterpret_cast<Fn *>(
-      CreateOriginalTrampoline(address, a_site.PatchSize));
+      CreateOriginalTrampoline(address, a_site.PatchSize)); // NOLINT(performance-no-int-to-ptr)
   WriteAbsoluteJump(address, reinterpret_cast<std::uintptr_t>(a_replacement),
                     a_site.PatchSize, a_site.Prologue);
   return original;
