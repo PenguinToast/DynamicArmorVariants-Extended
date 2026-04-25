@@ -343,6 +343,26 @@ constexpr std::array kHookLayouts{
             MakeSite("OverrideInterface::VisitArmorAddon", 0x000C2F60, 19,
                      kVisitArmorAddonPrologue_0419_15),
     },
+    HookLayout{
+        .Label = "RaceMenu AE 0.4.20.0"sv,
+        .ModuleName = kSkee64ModuleName,
+        .Version = REL::Version{0, 4, 20, 0},
+        .TimeDateStamp = 0x69E40A71,
+        .GetSkinFormSite = MakeSite("NifUtils::GetSkinForm", 0x000C6410, 13,
+                                    kGetSkinFormPrologue_0419_15),
+        .VisitAllWornItemsSite =
+            MakeSite("NifUtils::VisitAllWornItems", 0x000C6760, 12,
+                     kVisitAllWornItemsPrologue_0419_15),
+        .VisitAllWornItemsSlotMatchSite =
+            MakeSite("NifUtils::VisitAllWornItems::MatchBySlot", 0x000C6881,
+                     15, kVisitAllWornItemsSlotMatchPrologue_0419_15),
+        .VisitAllWornItemsSlotMatchMaskStackOffset = 0x50,
+        .VisitAllWornItemsSlotMatchEntryRegister =
+            HookLayout::EntryRegister::Rsi,
+        .VisitArmorAddonSite =
+            MakeSite("OverrideInterface::VisitArmorAddon", 0x000C6BB0, 19,
+                     kVisitArmorAddonPrologue_0419_15),
+    },
 };
 } // namespace
 
